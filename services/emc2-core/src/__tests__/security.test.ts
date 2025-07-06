@@ -4,7 +4,6 @@
  * Comprehensive security testing for EMC2-Core
  */
 
-import { FastifyInstance } from 'fastify';
 import { createServer } from '../server';
 import { 
   validatePassword, 
@@ -19,7 +18,7 @@ import {
 } from '../middleware/security';
 
 describe('Security Tests', () => {
-  let server: FastifyInstance;
+  let server: any; // Using any to avoid type conflicts
 
   beforeAll(async () => {
     server = await createServer();

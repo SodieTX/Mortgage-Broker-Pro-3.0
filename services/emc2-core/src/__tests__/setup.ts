@@ -73,4 +73,12 @@ declare global {
   }
 }
 
+// Dummy test to satisfy Jest requirement
+describe('Test Setup', () => {
+  it('should initialize test environment', () => {
+    expect(process.env.NODE_ENV).toBe('test');
+    expect(process.env.LOG_LEVEL).toBe('error');
+  });
+});
+
 export {};

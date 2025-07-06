@@ -4,14 +4,13 @@
  * Tests the interaction between services with real dependencies
  */
 
-import { FastifyInstance } from 'fastify';
 import { createServer } from '../../server';
 import { Pool } from 'pg';
 import Redis from 'ioredis';
 import { ServiceInitializer } from '../../services/serviceInitializer';
 
 describe('Service Integration Tests', () => {
-  let app: FastifyInstance;
+  let app: any; // Using any to avoid type conflicts
   let db: Pool;
   let redis: Redis;
   
@@ -200,7 +199,6 @@ describe('Service Integration Tests', () => {
   });
 
   describe('Scenario Management', () => {
-    let userId: string;
     let authToken: string;
     let scenarioId: string;
 
@@ -212,7 +210,7 @@ describe('Service Integration Tests', () => {
          RETURNING id`,
         ['scenario-test@example.com', 'Scenario', 'Test', 'hashed']
       );
-      userId = userResult.rows[0].id;
+      // userId = userResult.rows[0].id; // Not used
       
       // Create auth token (in real app, this would be via login)
       const authResponse = await app.inject({
@@ -283,6 +281,23 @@ describe('Service Integration Tests', () => {
   });
 
   describe('Email Service Integration', () => {
+    let authToken: string;
+    
+    beforeAll(async () => {
+      // Get auth token
+      const authResponse = await app.inject({
+        method: 'POST',
+        url: '/auth/register',
+        payload: {
+          email: 'email-test@example.com',
+          firstName: 'Email',
+          lastName: 'Test',
+          password: 'Test123!@#'
+        }
+      });
+      authToken = authResponse.json().accessToken;
+    });
+    
     test('Should send test email without error', async () => {
       const response = await app.inject({
         method: 'POST',
@@ -370,7 +385,7 @@ describe('Service Integration Tests', () => {
 });
 
 describe('Error Handling Integration', () => {
-  let app: FastifyInstance;
+  let app: any; // Using any to avoid type conflicts
 
   beforeAll(async () => {
     app = await createServer();
