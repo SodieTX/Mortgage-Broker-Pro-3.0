@@ -7,9 +7,8 @@
 import nodemailer, { Transporter } from 'nodemailer';
 import sgMail from '@sendgrid/mail';
 import Mailgun from 'mailgun.js';
-import formData from 'form-data';
+import FormData from 'form-data';
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
-import { emailConfig } from '../config/email';
 import { logger } from '../utils/logger';
 import { emailRateLimitService } from './emailRateLimitService';
 import { emailMonitoringService } from './emailMonitoringService';
@@ -33,8 +32,21 @@ export class EmailProviderService {
   private healthCheckInterval: NodeJS.Timer | null = null;
 
   constructor() {
-    this.initializeProviders();
-    this.startHealthChecks();
+    // Defer initialization to avoid blocking startup
+  }
+
+  /**
+   * Initialize the email provider service
+   */
+  async initialize(): Promise<void> {
+    try {
+      await this.initializeProviders();
+      // Start health checks after a delay
+      setTimeout(() => this.startHealthChecks(), 10000);
+    } catch (error) {
+      logger.error('Failed to initialize email provider service:', error);
+      // Don't throw - allow service to run with degraded functionality
+    }
   }
 
   /**
@@ -98,10 +110,27 @@ export class EmailProviderService {
     weight: number
   ) {
     try {
-      const transporter = nodemailer.createTransporter(config);
+      const transporter = nodemailer.createTransport(config);
       
-      // Verify connection
-      await transporter.verify();
+      // Try to verify connection but don't fail if it doesn't work
+      try {
+        await transporter.verify();
+      } catch (verifyError) {
+        logger.warn(`SMTP verification failed for ${name}, will retry later:`, verifyError);
+        // Still add the provider but with reduced health
+        this.providers.set(name, {
+          name,
+          type: 'smtp',
+          priority,
+          weight,
+          enabled: false,
+          healthScore: 0,
+          send: async (options) => {
+            return transporter.sendMail(options);
+          }
+        });
+        return;
+      }
       
       this.smtpTransporters.set(name, transporter);
       
@@ -168,8 +197,8 @@ export class EmailProviderService {
     priority: number,
     weight: number
   ) {
-    const mailgun = new Mailgun(formData);
-    const client = mailgun.client({
+    const mg = new Mailgun(FormData as any);
+    const client = mg.client({
       username: 'api',
       key: apiKey,
       url: eu ? 'https://api.eu.mailgun.net' : 'https://api.mailgun.net'
@@ -384,7 +413,7 @@ export class EmailProviderService {
     // Apply weighted selection within each group
     const result: EmailProvider[] = [];
     
-    for (const [priority, group] of grouped) {
+    for (const [_priority, group] of grouped) {
       if (group.length === 1) {
         result.push(group[0]);
       } else {
@@ -417,7 +446,7 @@ export class EmailProviderService {
   private updateProviderHealth(
     providerName: string,
     success: boolean,
-    error?: Error
+    _error?: Error
   ) {
     const provider = this.providers.get(providerName);
     if (!provider) return;
@@ -550,7 +579,7 @@ export class EmailProviderService {
    */
   stop() {
     if (this.healthCheckInterval) {
-      clearInterval(this.healthCheckInterval);
+      clearInterval(this.healthCheckInterval as any);
       this.healthCheckInterval = null;
     }
     

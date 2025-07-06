@@ -124,7 +124,7 @@ const emailRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
     }
-  }, async (request: FastifyRequest, reply: FastifyReply) => {
+  }, async (_request: FastifyRequest, reply: FastifyReply) => {
     try {
       // Get dashboard data
       const dashboard = emailMonitoringService.getDashboardData();
@@ -157,7 +157,7 @@ const emailRoutes: FastifyPluginAsync = async (fastify) => {
    * Get Prometheus metrics
    */
   fastify.get('/api/email/metrics/prometheus', async (
-    request: FastifyRequest,
+    _request: FastifyRequest,
     reply: FastifyReply
   ) => {
     try {
@@ -250,7 +250,7 @@ const emailRoutes: FastifyPluginAsync = async (fastify) => {
       // Handle different provider webhooks
       switch (provider) {
         case 'sendgrid':
-          await handleSendGridWebhook(event);
+          await handleSendGridWebhook(Array.isArray(event) ? event : [event]);
           break;
         case 'mailgun':
           await handleMailgunWebhook(event);
@@ -291,11 +291,11 @@ const emailRoutes: FastifyPluginAsync = async (fastify) => {
     const { to, provider } = request.body;
     
     try {
-      // Import email service
-      const { emailService } = await import('../services/emailService');
+      // Import email service wrapper
+      const { email } = await import('../services/email');
       
       // Send test email
-      const result = await emailService.sendEmail({
+      const result = await email.sendEmail({
         to,
         subject: 'Test Email from Mortgage Broker Pro',
         html: `

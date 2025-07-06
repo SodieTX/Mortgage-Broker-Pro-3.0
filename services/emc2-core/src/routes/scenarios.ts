@@ -7,12 +7,14 @@
 import { FastifyInstance } from 'fastify';
 import { getDatabase } from '../db/connection';
 import { ScenarioService } from '../services/scenarioService';
+import { LenderMatchingService } from '../services/lenderMatchingService';
 import { CreateScenarioDTO, UpdateScenarioDTO, ScenarioStatus } from '../types/scenario';
 import { validateScenarioCreate, validateLoanData } from '../utils/validation';
 
 export async function scenarioRoutes(server: FastifyInstance) {
   const db = await getDatabase();
   const scenarioService = new ScenarioService(db);
+  const matchingService = new LenderMatchingService(db);
   
   // Create a new scenario
   server.post<{
@@ -163,6 +165,58 @@ export async function scenarioRoutes(server: FastifyInstance) {
       request.log.error('Failed to calculate scenario results', error);
       return reply.code(500).send({ 
         error: 'Failed to calculate scenario results',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
+  // BABY STEP: Find matching lenders for a scenario
+  server.get<{
+    Params: { id: string }
+  }>('/scenarios/:id/matches', async (request, reply) => {
+    try {
+      // Get the scenario
+      const scenario = await scenarioService.getScenario(request.params.id);
+      
+      if (!scenario) {
+        return reply.code(404).send({ error: 'Scenario not found' });
+      }
+      
+      // Extract basic criteria from scenario
+      const state = scenario.loanData.property?.state;
+      const loanAmount = scenario.loanData.loan?.loanAmount;
+      
+      if (!state || !loanAmount) {
+        return reply.code(400).send({ 
+          error: 'Missing required data',
+          message: 'Scenario must have property state and loan amount for matching'
+        });
+      }
+      
+      // Find matches
+      const matches = await matchingService.findBasicMatches({
+        state,
+        loanAmount,
+        propertyType: scenario.loanData.property?.propertyType
+      });
+      
+      // Get summary
+      const summary = await matchingService.getMatchSummary(matches);
+      
+      return reply.send({
+        scenarioId: scenario.id,
+        criteria: {
+          state,
+          loanAmount,
+          propertyType: scenario.loanData.property?.propertyType
+        },
+        matches,
+        summary
+      });
+    } catch (error) {
+      request.log.error('Failed to find matches', error);
+      return reply.code(500).send({ 
+        error: 'Failed to find matches',
         message: error instanceof Error ? error.message : 'Unknown error'
       });
     }

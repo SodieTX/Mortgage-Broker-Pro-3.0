@@ -108,7 +108,7 @@ export class ReportService {
       doc.moveDown();
       
       // Key metric box
-      const dscrColor = dscrResult.dscr >= 1.25 ? '#0f0' : '#f00';
+      // const dscrColor = dscrResult.dscr >= 1.25 ? '#0f0' : '#f00';
       doc.rect(50, doc.y, 200, 60)
         .fillAndStroke('#f5f5f5', '#ddd');
       doc.fillColor('#000');
@@ -181,7 +181,7 @@ export class ReportService {
       doc.fontSize(10).fillColor('#000');
       doc.text('Loan Details', col1, tableTop, { width: colWidth, align: 'left' });
       
-      scenarios.forEach((scenario, index) => {
+      scenarios.forEach((_scenario, index) => {
         const colX = col1 + (index + 1) * colWidth;
         doc.text(`Option ${index + 1}`, colX, tableTop, { width: colWidth, align: 'center' });
       });

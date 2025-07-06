@@ -1,0 +1,26 @@
+# Development Dockerfile with proper node_modules handling
+FROM node:20-alpine
+
+# Install build tools for native dependencies
+RUN apk add --no-cache python3 make g++ 
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files first for better caching
+COPY package*.json ./
+
+# Install ALL dependencies (including devDependencies)
+RUN npm install
+
+# Install nodemon globally for development
+RUN npm install -g nodemon
+
+# Create a directory for source code
+RUN mkdir -p src
+
+# Expose port
+EXPOSE 3001
+
+# Development command with nodemon
+CMD ["npm", "run", "dev"]

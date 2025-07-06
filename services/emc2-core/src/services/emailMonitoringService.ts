@@ -32,23 +32,23 @@ export class EmailMonitoringService {
   private registry: Registry;
   
   // Counters
-  private emailsSentCounter: Counter;
-  private emailsFailedCounter: Counter;
-  private emailsRetriedCounter: Counter;
-  private emailsBouncedCounter: Counter;
-  private emailsOpenedCounter: Counter;
-  private emailsClickedCounter: Counter;
+  private emailsSentCounter!: Counter;
+  private emailsFailedCounter!: Counter;
+  private emailsRetriedCounter!: Counter;
+  private emailsBouncedCounter!: Counter;
+  private emailsOpenedCounter!: Counter;
+  private emailsClickedCounter!: Counter;
   
   // Histograms
-  private emailSendDuration: Histogram;
-  private queueWaitTime: Histogram;
-  private batchProcessingTime: Histogram;
+  private emailSendDuration!: Histogram;
+  private queueWaitTime!: Histogram;
+  private batchProcessingTime!: Histogram;
   
   // Gauges
-  private queueDepthGauge: Gauge;
-  private activeJobsGauge: Gauge;
-  private failedJobsGauge: Gauge;
-  private smtpConnectionsGauge: Gauge;
+  private queueDepthGauge!: Gauge;
+  private activeJobsGauge!: Gauge;
+  private failedJobsGauge!: Gauge;
+  private smtpConnectionsGauge!: Gauge;
   
   // Provider-specific metrics
   private providerMetrics: Map<string, ProviderMetrics> = new Map();
@@ -68,7 +68,7 @@ export class EmailMonitoringService {
   constructor() {
     this.registry = new Registry();
     this.initializeMetrics();
-    this.startMonitoring();
+    // Don't start monitoring immediately - wait for initialize() to be called
   }
 
   private initializeMetrics() {
@@ -187,7 +187,11 @@ export class EmailMonitoringService {
         // Check alert conditions
         this.checkAlerts(stats);
       } catch (error) {
-        logger.error('Failed to update queue metrics:', error);
+        // Don't log errors for queue metrics if queues aren't available
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (!errorMessage.includes('queue')) {
+          logger.error('Failed to update queue metrics:', error);
+        }
       }
     }, 10000);
 
@@ -373,6 +377,14 @@ export class EmailMonitoringService {
     this.recentMetrics = this.recentMetrics.filter(m => 
       (m as any).timestamp > oneHourAgo
     );
+  }
+
+  /**
+   * Initialize the monitoring service
+   */
+  initialize() {
+    this.startMonitoring();
+    logger.info('Email monitoring service initialized');
   }
 
   /**

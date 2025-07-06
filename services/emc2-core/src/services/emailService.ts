@@ -11,8 +11,6 @@ import path from 'path';
 import { emailConfig, validateEmailConfig } from '../config/email';
 import { logger } from '../utils/logger';
 import { emailProviderService } from './emailProviderService';
-import { emailRateLimitService } from './emailRateLimitService';
-import { emailMonitoringService } from './emailMonitoringService';
 import { emailTrackingService } from './emailTrackingService';
 import { emailPreferencesService } from './emailPreferencesService';
 import { v4 as uuidv4 } from 'uuid';
@@ -73,7 +71,7 @@ export class EmailService {
       }
 
       // Create transporter
-      this.transporter = nodemailer.createTransporter({
+      this.transporter = nodemailer.createTransport({
         host: emailConfig.smtp.host,
         port: emailConfig.smtp.port,
         secure: emailConfig.smtp.secure,
@@ -83,7 +81,7 @@ export class EmailService {
 
       // Verify connection
       if (emailConfig.smtp.auth.user && emailConfig.smtp.auth.pass) {
-        await this.transporter.verify();
+        await this.transporter!.verify();
         logger.info('Email service connected successfully');
       } else {
         logger.warn('Email service initialized without credentials - emails will not be sent');
@@ -253,7 +251,7 @@ export class EmailService {
   /**
    * Queue email for background processing
    */
-  async queueEmail(options: EmailOptions, priority: number = 0): Promise<string> {
+  async queueEmail(options: EmailOptions, _priority: number = 0): Promise<string> {
     // In a full implementation, this would add to a Bull queue
     // For now, we'll send immediately
     await this.sendEmailWithRetry(options);

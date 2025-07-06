@@ -17,6 +17,8 @@ export interface User {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  twoFactorEnabled?: boolean;
+  lastLoginAt?: Date;
 }
 
 export interface CreateUserDTO {

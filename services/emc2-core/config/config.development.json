@@ -1,0 +1,12 @@
+{
+  "encrypted": "Av/Y5miElhVJs5M4bdm3s9FwbQmKVaGrzVptD0fFc/Pb6oxjASQr4m8yw42E1Bfel/GEOG/KWD0FXDx0NzlnbuTQgeVnIGJjc0hb+STgJQM8bJ98OnMoqsp1dvrrMoY+BtxiSh+xr37X+HVOsN7pAxdO9gXVlpF2jYrO1q9p1TWobznNLYqMCuJarZoMaxGNwHR5joLwDCnnlnpwxCQ1VFDM3LcXQ1uV5yENHiFE4J3gbOyIxBa+lRx3gzy1dMsInsgnshVS/K6nSNpMyv6XCulxcyQ8XxVSAroa+waGpzqOY/HIhq76CqvkOYpV8tw4GmqGTKIcsui4OHSQUlm0hV36j8S7c/0rQv1/5zodnGH3rPz93wEN5AcmUWl0HYajUUGJJN9AVltoyYBy9oJTD4EQd4O/VCVjgiVhKKym8f5k5V0TzUn/ncXGIzd6QyZMOJeWjdG/uYIvmYG4lW+Y9rbPE8ERHiIfsMlO0YQtj0IKGqMcu1U7aHO47RT34PI16GgS5cjBq9LGqoydfSHFEkl9ygcL7rwug/QLX8YIq5eTUPFmOHidd2aBkR0+oc/ZTeFWGfvuhNdM2SQnBXP3x+qNM26N3/aH8tdnP3Mc/kv0T8RY+KFGiupRQwOUluUfjjCHzNpRuRfRXRSkbhO137jicLIzP/Lq7Boat3Sqf/G/aR+Fcbo2tZx4DWCyue7G5w==",
+  "iv": "PISagmC2KG12NSHn0q50jQ==",
+  "tag": "SyDApI2+HPRtT0WAqnnphQ==",
+  "salt": "aVJKjT/vrWkzjLq+8Q+9SHPWsGcojFaDP7jg59kY+Am81dzNHZSR+K9rnojIzpMG+bfMrE/YJuSajueq64E3cg==",
+  "jwt": {
+    "secret": "\\ioVPcEuv6j2gPkQ61bY1XLv/fAwksWQOmh5KD0mxXWo=\\"
+  },
+  "database": {
+    "password": "\\mortgage_pass\\"
+  }
+}

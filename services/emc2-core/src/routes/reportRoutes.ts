@@ -10,13 +10,6 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { getDatabase } from '../db/connection';
 import { ScenarioService } from '../services/scenarioService';
 
-declare module '@fastify/jwt' {
-  interface FastifyJWT {
-    payload: { id: string; email: string; role: string };
-    user: { id: string; email: string; role: string };
-  }
-}
-
 const reportRoutes: FastifyPluginAsync = async (fastify) => {
   const reportService = new ReportService();
   const db = await getDatabase();
@@ -107,7 +100,22 @@ const reportRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
     }
-  }, async (request: FastifyRequest<{ Body: any }>, reply: FastifyReply) => {
+  }, async (request: FastifyRequest<{ Body: {
+    property: {
+      monthlyRent: number;
+      vacancyRate?: number;
+      propertyTaxes?: number;
+      insurance?: number;
+      hoaFees?: number;
+      maintenance?: number;
+      management?: number;
+      otherExpenses?: number;
+    };
+    loanAmount: number;
+    interestRate: number;
+    termMonths: number;
+    purchasePrice?: number;
+  } }>, reply: FastifyReply) => {
     const { property, loanAmount, interestRate, termMonths, purchasePrice } = request.body;
     
     try {

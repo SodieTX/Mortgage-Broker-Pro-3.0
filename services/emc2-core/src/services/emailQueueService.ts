@@ -92,14 +92,45 @@ export class EmailQueueService {
     if (this.isInitialized) return;
 
     try {
-      // Create queues
-      this.emailQueue = new Queue('email-queue', {
-        redis: emailConfig.queue.redis
+      logger.debug('Initializing email queue service with Redis config:', {
+        host: emailConfig.queue.redis.host,
+        port: emailConfig.queue.redis.port
       });
 
-      this.campaignQueue = new Queue('campaign-queue', {
-        redis: emailConfig.queue.redis
-      });
+      // Create queues with connection timeout
+      const queueOptions = {
+        redis: {
+          ...emailConfig.queue.redis,
+          connectTimeout: 5000, // 5 second timeout
+          maxRetriesPerRequest: 1,
+          enableReadyCheck: false,
+          retryStrategy: (times: number) => {
+            if (times > 3) {
+              logger.error('Email queue Redis connection failed after 3 attempts');
+              return null;
+            }
+            return Math.min(times * 100, 3000);
+          }
+        }
+      };
+
+      this.emailQueue = new Queue('email-queue', queueOptions);
+      this.campaignQueue = new Queue('campaign-queue', queueOptions);
+
+      // Wait for queues to be ready with timeout
+      const readyTimeout = setTimeout(() => {
+        logger.warn('Email queue Redis connection timeout - proceeding without queues');
+      }, 10000);
+
+      await Promise.race([
+        Promise.all([
+          this.emailQueue.isReady(),
+          this.campaignQueue.isReady()
+        ]),
+        new Promise((resolve) => setTimeout(resolve, 10000))
+      ]);
+
+      clearTimeout(readyTimeout);
 
       // Set up queue processors
       this.setupProcessors();
@@ -108,9 +139,10 @@ export class EmailQueueService {
       this.setupEventHandlers();
 
       this.isInitialized = true;
-      logger.info('Email queue service initialized');
+      logger.info('Email queue service initialized successfully');
     } catch (error) {
       logger.error('Failed to initialize email queue service:', error);
+      this.isInitialized = false;
       // Allow service to run without queuing
     }
   }
