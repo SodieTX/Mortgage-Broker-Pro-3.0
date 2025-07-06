@@ -1,38 +1,118 @@
-# The Pinocchio Check - No Lies, No BS, Just Truth
-# This script brutally checks if we're building a REAL app or just playing pretend
+# The Pinocchio Check - System Operational Readiness Test
+# This script checks if we have a working, deployable system or just scattered code
 
-Write-Host "`n🤥 PINOCCHIO CHECK - IS THIS A REAL APP OR JUST WOOD?" -ForegroundColor Magenta
-Write-Host "=====================================================`n" -ForegroundColor Magenta
+Write-Host "`n🤥 PINOCCHIO CHECK - IS THIS SYSTEM ACTUALLY OPERATIONAL?" -ForegroundColor Magenta
+Write-Host "========================================================`n" -ForegroundColor Magenta
 
 $lies = 0
 $truths = 0
 $noseLength = ""
 
-# Check 1: Can a real user actually use this?
-Write-Host "1. REAL USER TEST:" -ForegroundColor Yellow
-Write-Host "   Can someone who isn't you create a loan scenario?" -ForegroundColor Cyan
+# Check 1: Core Services Running
+Write-Host "1. INFRASTRUCTURE CHECK:" -ForegroundColor Yellow
+Write-Host "   Are all core services up and running?" -ForegroundColor Cyan
 
+$runningServices = docker ps --format "{{.Names}}" 2>$null
+$requiredServices = @("postgres", "redis", "emc2-core")
+$runningCount = 0
+
+foreach ($service in $requiredServices) {
+    if ($runningServices -match $service) {
+        Write-Host "   ✓ $service is running" -ForegroundColor Green
+        $runningCount++
+    } else {
+        Write-Host "   🤥 $service is NOT running" -ForegroundColor Red
+    }
+}
+
+if ($runningCount -eq $requiredServices.Count) {
+    Write-Host "   ✓ All core services operational" -ForegroundColor Green
+    $truths++
+} else {
+    Write-Host "   🤥 Missing $(($requiredServices.Count - $runningCount)) critical services" -ForegroundColor Red
+    $lies++
+    $noseLength += "="
+}
+
+# Check 2: Service Communication
+Write-Host "`n2. SERVICE COMMUNICATION TEST:" -ForegroundColor Yellow
+Write-Host "   Can services communicate with each other?" -ForegroundColor Cyan
+
+# Test database connectivity
+$dbOk = $false
 try {
-    # Try to create a scenario with realistic data
+    $dbTest = docker exec postgres pg_isready -U postgres 2>&1
+    if ($dbTest -match "accepting connections") {
+        Write-Host "   ✓ Database accepting connections" -ForegroundColor Green
+        $dbOk = $true
+    } else {
+        Write-Host "   🤥 Database not accepting connections" -ForegroundColor Red
+    }
+} catch {
+    Write-Host "   🤥 Cannot test database connectivity" -ForegroundColor Red
+}
+
+# Test API endpoint
+$apiOk = $false
+try {
+    $apiTest = Invoke-RestMethod -Uri "http://localhost:3001/health" -TimeoutSec 5 -ErrorAction Stop
+    Write-Host "   ✓ API endpoint responding" -ForegroundColor Green
+    $apiOk = $true
+} catch {
+    Write-Host "   🤥 API endpoint not responding" -ForegroundColor Red
+}
+
+# Test Redis connectivity
+$redisOk = $false
+try {
+    $redisTest = docker exec redis redis-cli ping 2>&1
+    if ($redisTest -match "PONG") {
+        Write-Host "   ✓ Redis responding to ping" -ForegroundColor Green
+        $redisOk = $true
+    } else {
+        Write-Host "   🤥 Redis not responding" -ForegroundColor Red
+    }
+} catch {
+    Write-Host "   🤥 Cannot test Redis connectivity" -ForegroundColor Red
+}
+
+if ($dbOk -and $apiOk -and $redisOk) {
+    Write-Host "   ✓ All services can communicate" -ForegroundColor Green
+    $truths++
+} else {
+    Write-Host "   🤥 Service communication issues detected" -ForegroundColor Red
+    $lies++
+    $noseLength += "=="
+}
+
+# Check 3: End-to-End Workflow Test
+Write-Host "`n3. END-TO-END WORKFLOW TEST:" -ForegroundColor Yellow
+Write-Host "   Can we complete a basic workflow from start to finish?" -ForegroundColor Cyan
+
+$workflowSteps = @()
+$scenarioId = $null
+
+# Step 1: Create a test scenario
+try {
     $testData = @{
-        title = "Real Customer Test - $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
-        description = "Testing if this actually works for real people"
+        title = "E2E Test - $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+        description = "End-to-end operational test"
         loanData = @{
             borrower = @{
-                firstName = "Jane"
-                lastName = "Customer"
-                creditScore = 720
-                annualIncome = 75000
+                firstName = "Test"
+                lastName = "User"
+                creditScore = 700
+                annualIncome = 100000
             }
             property = @{
-                address = "456 Real Street"
-                city = "Dallas"
+                address = "123 Test St"
+                city = "Austin"
                 state = "TX"
-                zipCode = "75001"
-                purchasePrice = 300000
+                zipCode = "78701"
+                purchasePrice = 400000
             }
             loan = @{
-                loanAmount = 240000
+                loanAmount = 320000
                 loanPurpose = "purchase"
                 loanType = "conventional"
                 termMonths = 360
@@ -40,167 +120,213 @@ try {
         }
     } | ConvertTo-Json -Depth 10
 
-    $response = Invoke-RestMethod -Uri "http://localhost:3001/api/v1/scenarios" `
+    $createResponse = Invoke-RestMethod -Uri "http://localhost:3001/api/v1/scenarios" `
         -Method Post `
         -Headers @{"x-api-key" = "test-key-for-development"; "Content-Type" = "application/json"} `
         -Body $testData `
         -TimeoutSec 5
 
-    if ($response.id) {
-        Write-Host "   ✓ YES - Real data goes in, real ID comes out: $($response.id)" -ForegroundColor Green
-        $truths++
-        
-        # Clean up
-        Invoke-RestMethod -Uri "http://localhost:3001/api/v1/scenarios/$($response.id)" `
-            -Method Delete `
-            -Headers @{"x-api-key" = "test-key-for-development"} | Out-Null
+    if ($createResponse.id) {
+        Write-Host "   ✓ Step 1: Created scenario with ID: $($createResponse.id)" -ForegroundColor Green
+        $workflowSteps += $true
+        $scenarioId = $createResponse.id
+    } else {
+        Write-Host "   🤥 Step 1: Failed to create scenario" -ForegroundColor Red
+        $workflowSteps += $false
     }
 } catch {
-    Write-Host "   🤥 NO - It's all pretend. Error: $($_.Exception.Message)" -ForegroundColor Red
-    $lies++
-    $noseLength += "="
+    Write-Host "   🤥 Step 1: Error creating scenario - $($_.Exception.Message)" -ForegroundColor Red
+    $workflowSteps += $false
 }
 
-# Check 2: Is there actual business logic or just CRUD?
-Write-Host "`n2. BUSINESS LOGIC TEST:" -ForegroundColor Yellow
-Write-Host "   Does the app DO anything besides store and retrieve?" -ForegroundColor Cyan
+# Step 2: Retrieve the scenario
+if ($scenarioId) {
+    try {
+        $getResponse = Invoke-RestMethod -Uri "http://localhost:3001/api/v1/scenarios/$scenarioId" `
+            -Method Get `
+            -Headers @{"x-api-key" = "test-key-for-development"} `
+            -TimeoutSec 5
 
-$businessLogicFiles = Get-ChildItem -Path "services" -Recurse -Include "*.ts" | 
-    Select-String -Pattern "calculate|validate|transform|evaluate|score|match" -List
+        if ($getResponse.id -eq $scenarioId) {
+            Write-Host "   ✓ Step 2: Retrieved scenario successfully" -ForegroundColor Green
+            $workflowSteps += $true
+        } else {
+            Write-Host "   🤥 Step 2: Failed to retrieve scenario" -ForegroundColor Red
+            $workflowSteps += $false
+        }
+    } catch {
+        Write-Host "   🤥 Step 2: Error retrieving scenario" -ForegroundColor Red
+        $workflowSteps += $false
+    }
 
-if ($businessLogicFiles.Count -gt 5) {
-    Write-Host "   ✓ Found $($businessLogicFiles.Count) files with real logic" -ForegroundColor Green
-    $truths++
-} else {
-    Write-Host "   🤥 Just a glorified database wrapper" -ForegroundColor Red
-    $lies++
-    $noseLength += "=="
-}
-
-# Check 3: Would you bet your mortgage on this code?
-Write-Host "`n3. PRODUCTION REALITY CHECK:" -ForegroundColor Yellow
-Write-Host "   Is this code production-ready or still a toy?" -ForegroundColor Cyan
-
-$productionChecks = @{
-    "Error handling" = (Get-ChildItem -Path "services" -Recurse -Include "*.ts" | Select-String -Pattern "try.*catch" -List).Count -gt 10
-    "Logging" = (Get-ChildItem -Path "services" -Recurse -Include "*.ts" | Select-String -Pattern "logger\." -List).Count -gt 5
-    "Validation" = Test-Path "services/emc2-core/src/utils/validation.ts"
-    "Authentication" = Test-Path "services/emc2-core/src/middleware/auth.ts"
-    "Tests exist" = (Get-ChildItem -Path "services" -Recurse -Include "*.test.ts").Count -gt 0
-}
-
-$prodReady = 0
-foreach ($check in $productionChecks.GetEnumerator()) {
-    if ($check.Value) {
-        Write-Host "   ✓ $($check.Key): YES" -ForegroundColor Green
-        $prodReady++
-    } else {
-        Write-Host "   🤥 $($check.Key): NO" -ForegroundColor Red
+    # Cleanup
+    try {
+        Invoke-RestMethod -Uri "http://localhost:3001/api/v1/scenarios/$scenarioId" `
+            -Method Delete `
+            -Headers @{"x-api-key" = "test-key-for-development"} -ErrorAction SilentlyContinue | Out-Null
+    } catch {
+        # Ignore cleanup errors
     }
 }
 
-if ($prodReady -ge 4) {
+$successfulSteps = ($workflowSteps | Where-Object { $_ -eq $true }).Count
+if ($successfulSteps -eq $workflowSteps.Count -and $workflowSteps.Count -gt 0) {
+    Write-Host "   ✓ Complete workflow executed successfully" -ForegroundColor Green
     $truths++
 } else {
+    Write-Host "   🤥 Workflow has broken steps" -ForegroundColor Red
     $lies++
     $noseLength += "==="
 }
 
-# Check 4: Are we solving a REAL problem?
-Write-Host "`n4. REAL PROBLEM TEST:" -ForegroundColor Yellow
-Write-Host "   Does this solve an actual mortgage broker problem?" -ForegroundColor Cyan
+# Check 4: Monitoring and Observability
+Write-Host "`n4. MONITORING AND OBSERVABILITY TEST:" -ForegroundColor Yellow
+Write-Host "   Can we monitor and debug the system in production?" -ForegroundColor Cyan
 
-# Check for domain-specific functionality
-$domainFeatures = @{
-    "Loan calculations" = (Select-String -Path "services/**/*.ts" -Pattern "loan.*amount|interest|payment" -List -ErrorAction SilentlyContinue).Count
-    "Credit checks" = (Select-String -Path "services/**/*.ts" -Pattern "credit.*score|creditScore" -List -ErrorAction SilentlyContinue).Count
-    "Property validation" = (Select-String -Path "services/**/*.ts" -Pattern "property|address|zipCode" -List -ErrorAction SilentlyContinue).Count
-    "Lender matching" = (Select-String -Path "database/**/*.sql" -Pattern "lender|match|evaluate" -List -ErrorAction SilentlyContinue).Count
+$monitoringChecks = @{
+    "Logging configured" = (Get-ChildItem -Path "services" -Recurse -Include "*.ts" -ErrorAction SilentlyContinue | Select-String -Pattern "winston|logger|console\.log" -List -ErrorAction SilentlyContinue).Count -gt 10
+    "Health endpoints" = Test-Path "services/emc2-core/src/routes/health.ts"
+    "Error tracking" = (Get-ChildItem -Path "services" -Recurse -Include "*.ts" -ErrorAction SilentlyContinue | Select-String -Pattern "try.*catch|error.*handler" -List -ErrorAction SilentlyContinue).Count -gt 5
+    "Docker logs accessible" = (docker ps --format "{{.Names}}" 2>$null | Measure-Object).Count -gt 0
 }
 
-$realFeatures = 0
-foreach ($feature in $domainFeatures.GetEnumerator()) {
-    if ($feature.Value -gt 0) {
-        Write-Host "   ✓ $($feature.Key): Found" -ForegroundColor Green
-        $realFeatures++
+$monitoringReady = 0
+foreach ($check in $monitoringChecks.GetEnumerator()) {
+    if ($check.Value) {
+        Write-Host "   ✓ $($check.Key)" -ForegroundColor Green
+        $monitoringReady++
+    } else {
+        Write-Host "   🤥 $($check.Key) - NO" -ForegroundColor Red
     }
 }
 
-if ($realFeatures -ge 3) {
-    Write-Host "   This is solving REAL mortgage problems" -ForegroundColor Green
+if ($monitoringReady -ge 3) {
+    Write-Host "   ✓ System is observable" -ForegroundColor Green
     $truths++
 } else {
-    Write-Host "   🤥 This could be any generic CRUD app" -ForegroundColor Red
+    Write-Host "   🤥 Flying blind - no proper monitoring" -ForegroundColor Red
     $lies++
     $noseLength += "===="
 }
 
-# Check 5: Are we making progress or just shuffling files?
-Write-Host "`n5. PROGRESS CHECK:" -ForegroundColor Yellow
-Write-Host "   What have we ACTUALLY built in the last commits?" -ForegroundColor Cyan
+# Check 5: Scalability Test
+Write-Host "`n5. SCALABILITY TEST:" -ForegroundColor Yellow
+Write-Host "   Can the system handle concurrent load?" -ForegroundColor Cyan
 
-$recentCommits = git log --oneline -10 2>&1
-$meaningfulCommits = $recentCommits | Select-String -Pattern "feature|implement|add.*functionality|fix.*bug|improve" -AllMatches
+# Simple concurrent request test
+$concurrentSuccess = 0
+$jobs = @()
 
-if ($meaningfulCommits.Count -ge 5) {
-    Write-Host "   ✓ Recent commits show real progress" -ForegroundColor Green
+Write-Host "   Testing 5 concurrent health checks..." -ForegroundColor Cyan
+for ($i = 1; $i -le 5; $i++) {
+    $jobs += Start-Job -ScriptBlock {
+        try {
+            Invoke-RestMethod -Uri "http://localhost:3001/health" -TimeoutSec 2 -ErrorAction Stop | Out-Null
+            return $true
+        } catch {
+            return $false
+        }
+    }
+}
+
+$results = $jobs | Wait-Job | Receive-Job
+$jobs | Remove-Job -Force
+
+$concurrentSuccess = ($results | Where-Object { $_ -eq $true }).Count
+
+if ($concurrentSuccess -eq 5) {
+    Write-Host "   ✓ All 5 concurrent requests succeeded" -ForegroundColor Green
+    $truths++
+} elseif ($concurrentSuccess -ge 3) {
+    Write-Host "   ⚠ $concurrentSuccess/5 concurrent requests succeeded" -ForegroundColor Yellow
     $truths++
 } else {
-    Write-Host "   🤥 Just moving files around" -ForegroundColor Red
+    Write-Host "   🤥 Only $concurrentSuccess/5 concurrent requests succeeded" -ForegroundColor Red
     $lies++
     $noseLength += "====="
 }
 
-# Check 6: The money test
-Write-Host "`n6. THE MONEY TEST:" -ForegroundColor Yellow
-Write-Host "   Would a mortgage broker pay $100/month for this TODAY?" -ForegroundColor Cyan
+# Check 6: Deployment Readiness
+Write-Host "`n6. DEPLOYMENT READINESS TEST:" -ForegroundColor Yellow
+Write-Host "   Is the system ready to deploy?" -ForegroundColor Cyan
 
-$valueFeatures = @(
-    (Test-Path "services/emc2-core/src/routes/scenarios.ts"),  # Can create scenarios
-    ((docker ps --format "{{.Names}}" | Select-String "emc2").Count -gt 0),  # Service running
-    ($truths -gt $lies)  # More truth than lies
-)
+$deploymentChecks = @{
+    "Docker Compose exists" = Test-Path "docker-compose.yml"
+    "Environment config" = (Test-Path ".env") -or (Test-Path ".env.example")
+    "Build scripts" = Test-Path "package.json"
+    "Database migrations" = (Get-ChildItem -Path "database/migrations" -Filter "*.sql" -ErrorAction SilentlyContinue).Count -gt 0
+    "Documentation" = Test-Path "README.md"
+}
 
-$hasValue = ($valueFeatures | Where-Object { $_ -eq $true }).Count
+$deployReady = 0
+foreach ($check in $deploymentChecks.GetEnumerator()) {
+    if ($check.Value) {
+        Write-Host "   ✓ $($check.Key)" -ForegroundColor Green
+        $deployReady++
+    } else {
+        Write-Host "   🤥 $($check.Key) - MISSING" -ForegroundColor Red
+    }
+}
 
-if ($hasValue -ge 2) {
-    Write-Host "   ✓ There's something here worth paying for" -ForegroundColor Green
+if ($deployReady -ge 4) {
+    Write-Host "   ✓ System is deployment ready" -ForegroundColor Green
     $truths++
 } else {
-    Write-Host "   🤥 Not yet - still in toy territory" -ForegroundColor Red
+    Write-Host "   🤥 Not ready for deployment" -ForegroundColor Red
     $lies++
     $noseLength += "======"
 }
 
 # FINAL VERDICT
 Write-Host "`n" + ("=" * 60) -ForegroundColor Magenta
-Write-Host "THE VERDICT:" -ForegroundColor Magenta
-Write-Host "Truths: $truths | Lies: $lies" -ForegroundColor White
+Write-Host "OPERATIONAL READINESS VERDICT:" -ForegroundColor Magenta
+Write-Host "Operational: $truths | Not Ready: $lies" -ForegroundColor White
 
 if ($noseLength.Length -gt 0) {
-    Write-Host "`nYour nose is this long: 👃$noseLength>" -ForegroundColor Red
+    Write-Host "`nSystem gaps detected: 👃$noseLength>" -ForegroundColor Red
 }
+
+$percentReady = [math]::Round(($truths / 6) * 100)
+Write-Host "`nSYSTEM READINESS: $percentReady%" -ForegroundColor White
 
 if ($lies -eq 0) {
-    Write-Host "`n🎉 CONGRATULATIONS! You're building a REAL app!" -ForegroundColor Green
-    Write-Host "Keep going - you're on the path to independence!" -ForegroundColor Green
+    Write-Host "`n🎉 EXCELLENT! Your system is fully operational!" -ForegroundColor Green
+    Write-Host "All core components are working and communicating properly." -ForegroundColor Green
 } elseif ($truths -gt $lies) {
-    Write-Host "`n⚠️  You're mostly honest, but watch out for the lies" -ForegroundColor Yellow
-    Write-Host "Focus on features that mortgage brokers will PAY for" -ForegroundColor Yellow
+    Write-Host "`n⚠️  PARTIALLY OPERATIONAL - Some components need attention" -ForegroundColor Yellow
+    Write-Host "The system can run but has gaps that need fixing." -ForegroundColor Yellow
 } else {
-    Write-Host "`n🤥 PINOCCHIO ALERT! Too much pretending, not enough building!" -ForegroundColor Red
-    Write-Host "`nSTOP and ask yourself:" -ForegroundColor Red
-    Write-Host "- What problem am I solving TODAY?" -ForegroundColor Red
-    Write-Host "- What feature would make a broker reach for their wallet?" -ForegroundColor Red
-    Write-Host "- Am I building or just playing with code?" -ForegroundColor Red
+    Write-Host "`n🤥 NOT OPERATIONAL! Too many broken components!" -ForegroundColor Red
+    Write-Host "`nCRITICAL ISSUES:" -ForegroundColor Red
+    Write-Host "- Core services not running or not communicating" -ForegroundColor Red
+    Write-Host "- Basic workflows are broken" -ForegroundColor Red
+    Write-Host "- System cannot handle production load" -ForegroundColor Red
 }
 
-Write-Host "`n💡 NEXT REAL STEPS:" -ForegroundColor Cyan
-if ($lies -gt 0) {
-    Write-Host "1. Build ONE feature a broker would actually use" -ForegroundColor White
-    Write-Host "2. Test it with fake broker scenarios" -ForegroundColor White
-    Write-Host "3. Make it fast enough for 100 concurrent users" -ForegroundColor White
-    Write-Host "4. Add the UI that makes it sellable" -ForegroundColor White
+Write-Host "`n💡 PRIORITY FIXES:" -ForegroundColor Cyan
+
+if (-not $runningServices -or $runningCount -lt $requiredServices.Count) {
+    Write-Host "1. 🔥 Get all services running: docker-compose up -d" -ForegroundColor White
 }
 
-Write-Host "`nRemember: Every line of code should move you closer to charging money!" -ForegroundColor Magenta
+if (-not $dbOk -or -not $apiOk -or -not $redisOk) {
+    Write-Host "2. 🔄 Fix service communication issues" -ForegroundColor White
+}
+
+if ($workflowSteps.Count -eq 0 -or $successfulSteps -lt $workflowSteps.Count) {
+    Write-Host "3. 🔧 Repair broken workflow steps" -ForegroundColor White
+}
+
+if ($monitoringReady -lt 3) {
+    Write-Host "4. 📊 Add proper logging and monitoring" -ForegroundColor White
+}
+
+if ($concurrentSuccess -lt 3) {
+    Write-Host "5. ⚡ Fix performance/concurrency issues" -ForegroundColor White
+}
+
+if ($deployReady -lt 4) {
+    Write-Host "6. 📦 Complete deployment configuration" -ForegroundColor White
+}
+
+Write-Host "`nGOAL: Get this system to 100% operational before adding new features!" -ForegroundColor Magenta
