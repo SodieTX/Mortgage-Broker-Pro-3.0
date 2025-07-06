@@ -11,6 +11,7 @@ import { healthRoutes } from './routes/health';
 import { scenarioRoutes } from './routes/scenarios';
 import { calculationRoutes } from './routes/calculations';
 import { authRoutes } from './routes/auth';
+import reportRoutes from './routes/reportRoutes';
 import { getDatabase } from './db/connection';
 
 export async function createServer() {
@@ -45,6 +46,9 @@ export async function createServer() {
   
   // Register auth routes
   await server.register(authRoutes, { prefix: '/api/v1' });
+  
+  // Register report routes
+  await server.register(reportRoutes);
   
   // Add a simple root route
   server.get('/', async () => {
