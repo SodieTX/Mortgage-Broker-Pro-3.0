@@ -17,7 +17,7 @@ export async function healthRoutes(server: FastifyInstance) {
   });
   
   // Detailed health check including database
-  server.get('/health/detailed', async (request, reply) => {
+  server.get('/health/detailed', async (_request, reply) => {
     const checks = {
       service: 'healthy',
       database: 'unknown',
