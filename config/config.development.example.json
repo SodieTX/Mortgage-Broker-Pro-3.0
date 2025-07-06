@@ -1,0 +1,51 @@
+{
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "database": "mortgage_broker_pro",
+    "username": "mortgage_user",
+    "password": "CHANGE_ME",
+    "ssl": false,
+    "poolSize": 10
+  },
+  "redis": {
+    "host": "localhost",
+    "port": 6379,
+    "keyPrefix": "mbp:dev:"
+  },
+  "jwt": {
+    "secret": "development-secret-change-in-production-minimum-32-characters",
+    "accessTokenExpiry": "15m",
+    "refreshTokenExpiry": "7d",
+    "issuer": "mortgage-broker-pro-dev"
+  },
+  "api": {
+    "port": 3001,
+    "host": "0.0.0.0",
+    "corsOrigin": ["http://localhost:3000", "http://localhost:3001"],
+    "rateLimit": {
+      "windowMs": 900000,
+      "max": 100
+    },
+    "apiKeys": ["dev-api-key-for-testing"]
+  },
+  "email": {
+    "provider": "smtp",
+    "from": {
+      "name": "Mortgage Broker Pro Dev",
+      "email": "dev@mortgage-broker.local"
+    },
+    "smtp": {
+      "host": "localhost",
+      "port": 1025,
+      "secure": false,
+      "username": "",
+      "password": ""
+    }
+  },
+  "features": {
+    "enableEmailTracking": true,
+    "enableDocumentUpload": true,
+    "enableReporting": true
+  }
+}
