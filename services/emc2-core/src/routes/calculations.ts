@@ -121,6 +121,84 @@ const paymentSchema = {
   }
 };
 
+// Additional schemas for new calculations
+const armSchema = {
+  body: {
+    type: 'object',
+    required: ['loanAmount', 'initialRate', 'termMonths', 'armDetails', 'scenarios'],
+    properties: {
+      loanAmount: { type: 'number', minimum: 1000 },
+      initialRate: { type: 'number', minimum: 0, maximum: 50 },
+      termMonths: { type: 'integer', minimum: 1, maximum: 480 },
+      armDetails: {
+        type: 'object',
+        required: ['fixedPeriodMonths', 'adjustmentFrequency', 'indexMargin', 'rateCaps'],
+        properties: {
+          fixedPeriodMonths: { type: 'integer', minimum: 1 },
+          adjustmentFrequency: { type: 'integer', minimum: 1 },
+          indexMargin: { type: 'number', minimum: 0 },
+          rateCaps: {
+            type: 'object',
+            required: ['periodic', 'lifetime'],
+            properties: {
+              periodic: { type: 'number', minimum: 0 },
+              lifetime: { type: 'number', minimum: 0 }
+            }
+          },
+          floorRate: { type: 'number', minimum: 0 }
+        }
+      },
+      scenarios: {
+        type: 'object',
+        required: ['bestCase', 'likelyCase', 'worstCase'],
+        properties: {
+          bestCase: { type: 'number', minimum: 0 },
+          likelyCase: { type: 'number', minimum: 0 },
+          worstCase: { type: 'number', minimum: 0 }
+        }
+      }
+    }
+  }
+};
+
+const refinanceSchema = {
+  body: {
+    type: 'object',
+    required: ['currentLoan', 'newLoan'],
+    properties: {
+      currentLoan: {
+        type: 'object',
+        required: ['originalAmount', 'currentBalance', 'currentRate', 'monthsRemaining', 'monthlyPayment'],
+        properties: {
+          originalAmount: { type: 'number', minimum: 0 },
+          currentBalance: { type: 'number', minimum: 0 },
+          currentRate: { type: 'number', minimum: 0 },
+          monthsRemaining: { type: 'integer', minimum: 0 },
+          monthlyPayment: { type: 'number', minimum: 0 }
+        }
+      },
+      newLoan: {
+        type: 'object',
+        required: ['amount', 'rate', 'termMonths', 'closingCosts'],
+        properties: {
+          amount: { type: 'number', minimum: 0 },
+          rate: { type: 'number', minimum: 0 },
+          termMonths: { type: 'integer', minimum: 1 },
+          closingCosts: { type: 'number', minimum: 0 }
+        }
+      },
+      additionalFactors: {
+        type: 'object',
+        properties: {
+          monthsToSell: { type: 'integer', minimum: 1 },
+          taxRate: { type: 'number', minimum: 0, maximum: 1 },
+          cashOutAmount: { type: 'number', minimum: 0 }
+        }
+      }
+    }
+  }
+};
+
 export const calculationRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * POST /calculations/loan-metrics
@@ -375,6 +453,115 @@ export const calculationRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.code(500).send({
           success: false,
           error: 'Failed to calculate payment',
+          message
+        });
+      }
+    }
+  );
+
+  /**
+   * POST /calculations/arm-scenarios
+   * Calculate ARM payment scenarios and comparisons
+   */
+  fastify.post(
+    '/calculations/arm-scenarios',
+    { schema: armSchema },
+    async (request, reply) => {
+      try {
+        const { loanAmount, initialRate, termMonths, armDetails, scenarios } = request.body as any;
+        
+        const result = calculationService.calculateARMScenarios(
+          loanAmount,
+          initialRate,
+          termMonths,
+          armDetails,
+          scenarios
+        );
+        
+        // Add interpretation
+        const riskLevel = 
+          scenarios.worstCase - scenarios.bestCase > 3 ? 'High' :
+          scenarios.worstCase - scenarios.bestCase > 2 ? 'Medium' : 'Low';
+        
+        return {
+          success: true,
+          data: {
+            ...result,
+            interpretation: {
+              riskLevel,
+              recommendation: result.comparison.breakEvenMonth > 60 
+                ? 'Consider ARM if planning to sell/refinance within 5 years'
+                : 'Fixed rate may be more suitable for long-term ownership',
+              paymentRange: {
+                min: result.scenarios.bestCase.payment,
+                max: result.scenarios.worstCase.payment
+              }
+            }
+          }
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        fastify.log.error({ error: message }, 'Failed to calculate ARM scenarios');
+        return reply.code(500).send({
+          success: false,
+          error: 'Failed to calculate ARM scenarios',
+          message
+        });
+      }
+    }
+  );
+
+  /**
+   * POST /calculations/refinance-analysis
+   * Analyze refinancing options and break-even points
+   */
+  fastify.post(
+    '/calculations/refinance-analysis',
+    { schema: refinanceSchema },
+    async (request, reply) => {
+      try {
+        const { currentLoan, newLoan, additionalFactors } = request.body as any;
+        
+        const result = calculationService.calculateRefinanceAnalysis(
+          currentLoan,
+          newLoan,
+          additionalFactors
+        );
+        
+        // Add time-based recommendations
+        const recommendations: string[] = [];
+        if (result.shouldRefinance) {
+          recommendations.push('Refinancing appears beneficial based on your situation');
+          if (result.breakEvenMonth <= 12) {
+            recommendations.push('Quick payback period - strongly consider refinancing');
+          } else if (result.breakEvenMonth <= 24) {
+            recommendations.push('Reasonable payback period - good refinancing opportunity');
+          }
+        } else {
+          recommendations.push('Current analysis suggests keeping existing loan');
+          if (result.monthlySavings < 0) {
+            recommendations.push('New loan would increase monthly payments');
+          }
+        }
+        
+        return {
+          success: true,
+          data: {
+            ...result,
+            recommendations,
+            summary: {
+              worthIt: result.shouldRefinance,
+              paybackPeriod: result.breakEvenMonth ? `${result.breakEvenMonth} months` : 'N/A',
+              totalBenefit: result.lifetimeSavings
+            }
+          }
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        fastify.log.error({ error: message }, 'Failed to analyze refinance');
+        return reply.code(500).send({
+          success: false,
+          error: 'Failed to analyze refinance',
           message
         });
       }

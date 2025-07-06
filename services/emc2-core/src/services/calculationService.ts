@@ -471,6 +471,264 @@ export class CalculationService {
   }
 
   /**
+   * Calculate ARM (Adjustable Rate Mortgage) scenarios
+   * Shows payment changes over time with rate adjustments
+   */
+  calculateARMScenarios(
+    loanAmount: number,
+    initialRate: number,
+    termMonths: number,
+    armDetails: {
+      fixedPeriodMonths: number; // e.g., 60 for 5/1 ARM
+      adjustmentFrequency: number; // months between adjustments after fixed period
+      indexMargin: number; // margin above index rate
+      rateCaps: {
+        periodic: number; // max change per adjustment
+        lifetime: number; // max change over life of loan
+      };
+      floorRate?: number; // minimum rate
+    },
+    scenarios: {
+      bestCase: number; // index rate in best scenario
+      likelyCase: number; // expected index rate
+      worstCase: number; // index rate in worst scenario
+    }
+  ): {
+    fixedPeriod: {
+      monthlyPayment: number;
+      totalPayments: number;
+      principalPaid: number;
+      remainingBalance: number;
+    };
+    scenarios: {
+      bestCase: { payment: number; totalInterest: number; maxPayment: number };
+      likelyCase: { payment: number; totalInterest: number; maxPayment: number };
+      worstCase: { payment: number; totalInterest: number; maxPayment: number };
+    };
+    comparison: {
+      vsFixed30: number; // savings/cost vs 30-year fixed
+      breakEvenMonth: number; // when ARM becomes more expensive
+    };
+  } {
+    // Calculate fixed period
+    const fixedPayment = this.calculateMonthlyPayment(loanAmount, initialRate, termMonths);
+    let balance = loanAmount;
+    let principalPaid = 0;
+    
+    // Calculate principal paid during fixed period
+    for (let month = 1; month <= armDetails.fixedPeriodMonths; month++) {
+      const monthlyRate = initialRate / 100 / 12;
+      const interestPayment = balance * monthlyRate;
+      const principalPayment = fixedPayment - interestPayment;
+      principalPaid += principalPayment;
+      balance -= principalPayment;
+    }
+    
+    const fixedPeriod = {
+      monthlyPayment: fixedPayment,
+      totalPayments: fixedPayment * armDetails.fixedPeriodMonths,
+      principalPaid: Math.round(principalPaid),
+      remainingBalance: Math.round(balance)
+    };
+    
+    // Calculate scenarios after fixed period
+    const calculateScenario = (indexRate: number) => {
+      let scenarioBalance = balance;
+      let totalInterest = 0;
+      let maxPayment = fixedPayment;
+      let currentRate = initialRate;
+      
+      const remainingMonths = termMonths - armDetails.fixedPeriodMonths;
+      const adjustments = Math.floor(remainingMonths / armDetails.adjustmentFrequency);
+      
+      for (let adj = 0; adj < adjustments; adj++) {
+        const newRate = Math.min(
+          Math.max(
+            indexRate + armDetails.indexMargin,
+            armDetails.floorRate || 0,
+            currentRate - armDetails.rateCaps.periodic
+          ),
+          currentRate + armDetails.rateCaps.periodic,
+          initialRate + armDetails.rateCaps.lifetime
+        );
+        
+        currentRate = newRate;
+        const monthsInPeriod = Math.min(
+          armDetails.adjustmentFrequency,
+          remainingMonths - (adj * armDetails.adjustmentFrequency)
+        );
+        
+        const periodPayment = this.calculateMonthlyPayment(
+          scenarioBalance,
+          currentRate,
+          remainingMonths - (adj * armDetails.adjustmentFrequency)
+        );
+        
+        maxPayment = Math.max(maxPayment, periodPayment);
+        
+        // Calculate interest for this period
+        for (let m = 0; m < monthsInPeriod; m++) {
+          const monthlyRate = currentRate / 100 / 12;
+          const interestPayment = scenarioBalance * monthlyRate;
+          totalInterest += interestPayment;
+          scenarioBalance -= (periodPayment - interestPayment);
+          if (scenarioBalance <= 0) break;
+        }
+      }
+      
+      return {
+        payment: Math.round(maxPayment),
+        totalInterest: Math.round(totalInterest),
+        maxPayment: Math.round(maxPayment)
+      };
+    };
+    
+    // Assume 7% for 30-year fixed comparison
+    const fixed30Payment = this.calculateMonthlyPayment(loanAmount, 7, 360);
+    const fixed30Total = fixed30Payment * 360;
+    const armWorstTotal = fixedPeriod.totalPayments + 
+      (calculateScenario(scenarios.worstCase).payment * (termMonths - armDetails.fixedPeriodMonths));
+    
+    // Find break-even month
+    let breakEvenMonth = 0;
+    let armTotal = 0;
+    let fixedTotal = 0;
+    
+    for (let month = 1; month <= termMonths; month++) {
+      if (month <= armDetails.fixedPeriodMonths) {
+        armTotal += fixedPayment;
+      } else {
+        armTotal += calculateScenario(scenarios.likelyCase).payment;
+      }
+      fixedTotal += fixed30Payment;
+      
+      if (armTotal > fixedTotal && breakEvenMonth === 0) {
+        breakEvenMonth = month;
+        break;
+      }
+    }
+    
+    return {
+      fixedPeriod,
+      scenarios: {
+        bestCase: calculateScenario(scenarios.bestCase),
+        likelyCase: calculateScenario(scenarios.likelyCase),
+        worstCase: calculateScenario(scenarios.worstCase)
+      },
+      comparison: {
+        vsFixed30: Math.round(fixed30Total - armWorstTotal),
+        breakEvenMonth
+      }
+    };
+  }
+
+  /**
+   * Calculate refinance analysis
+   * Determines if refinancing makes financial sense
+   */
+  calculateRefinanceAnalysis(
+    currentLoan: {
+      originalAmount: number;
+      currentBalance: number;
+      currentRate: number;
+      monthsRemaining: number;
+      monthlyPayment: number;
+    },
+    newLoan: {
+      amount: number; // usually current balance + closing costs
+      rate: number;
+      termMonths: number;
+      closingCosts: number;
+    },
+    additionalFactors?: {
+      monthsToSell?: number; // if planning to sell
+      taxRate?: number; // for deduction calculations
+      cashOutAmount?: number; // if doing cash-out refi
+    }
+  ): {
+    monthlySavings: number;
+    breakEvenMonth: number;
+    lifetimeSavings: number;
+    shouldRefinance: boolean;
+    analysis: {
+      currentLoanCost: number;
+      newLoanCost: number;
+      totalSavings: number;
+      effectiveRate: number;
+      cashFlowImprovement: number;
+    };
+    warnings: string[];
+  } {
+    const warnings: string[] = [];
+    
+    // Calculate new payment
+    const newPayment = this.calculateMonthlyPayment(
+      newLoan.amount,
+      newLoan.rate,
+      newLoan.termMonths
+    );
+    
+    // Monthly savings
+    const monthlySavings = currentLoan.monthlyPayment - newPayment;
+    
+    // Break-even calculation
+    const breakEvenMonth = monthlySavings > 0 
+      ? Math.ceil(newLoan.closingCosts / monthlySavings)
+      : 0;
+    
+    // Calculate total costs
+    const monthsToConsider = additionalFactors?.monthsToSell || 
+      Math.min(currentLoan.monthsRemaining, newLoan.termMonths);
+    
+    const currentLoanCost = currentLoan.monthlyPayment * monthsToConsider;
+    const newLoanCost = newPayment * monthsToConsider + newLoan.closingCosts;
+    const lifetimeSavings = currentLoanCost - newLoanCost;
+    
+    // Warnings
+    if (newLoan.termMonths > currentLoan.monthsRemaining) {
+      warnings.push('New loan extends repayment period');
+    }
+    
+    if (additionalFactors?.cashOutAmount) {
+      warnings.push('Cash-out refinance increases total debt');
+    }
+    
+    if (breakEvenMonth > 36) {
+      warnings.push('Long break-even period (over 3 years)');
+    }
+    
+    if (additionalFactors?.monthsToSell && breakEvenMonth > additionalFactors.monthsToSell) {
+      warnings.push('Will not break even before planned sale');
+    }
+    
+    // Determine recommendation
+    const shouldRefinance = monthlySavings > 0 && 
+      lifetimeSavings > 0 && 
+      (additionalFactors?.monthsToSell ? breakEvenMonth < additionalFactors.monthsToSell : breakEvenMonth < 48);
+    
+    // Calculate effective rate (including closing costs)
+    const totalNewLoanPayments = newPayment * newLoan.termMonths;
+    const effectiveRate = newLoan.amount > 0
+      ? ((totalNewLoanPayments / (newLoan.amount - newLoan.closingCosts)) - 1) * 12 / newLoan.termMonths * 100
+      : 0;
+    
+    return {
+      monthlySavings: Math.round(monthlySavings),
+      breakEvenMonth,
+      lifetimeSavings: Math.round(lifetimeSavings),
+      shouldRefinance,
+      analysis: {
+        currentLoanCost: Math.round(currentLoanCost),
+        newLoanCost: Math.round(newLoanCost),
+        totalSavings: Math.round(lifetimeSavings),
+        effectiveRate: Math.round(effectiveRate * 100) / 100,
+        cashFlowImprovement: Math.round(monthlySavings * 12) // annual
+      },
+      warnings
+    };
+  }
+
+  /**
    * Calculate Cap Rate and other investment metrics
    * Helps brokers evaluate investment property deals
    */
