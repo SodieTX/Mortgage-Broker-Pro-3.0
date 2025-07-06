@@ -36,6 +36,29 @@ services:
       postgres:
         condition: service_healthy
 
+  emc2-core:
+    build:
+      context: ./services/emc2-core
+      dockerfile: Dockerfile
+    container_name: mortgage_broker_emc2_core
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=mortgage_broker_pro
+      - DB_USER=mortgage_user
+      - DB_PASSWORD=mortgage_pass
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/emc2-core:/app
+      - /app/node_modules
+    command: npm run dev
+
 volumes:
   postgres_data:
     name: mortgage_broker_postgres_data
