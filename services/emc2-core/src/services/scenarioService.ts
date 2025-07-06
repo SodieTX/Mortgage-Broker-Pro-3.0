@@ -5,14 +5,17 @@
  */
 
 import { Pool } from 'pg';
-import { CreateScenarioDTO, UpdateScenarioDTO, Scenario, ScenarioStatus } from '../types/scenario';
+import { CreateScenarioDTO, UpdateScenarioDTO, Scenario, ScenarioStatus, CalculationResults } from '../types/scenario';
 import { logger } from '../utils/logger';
+import { CalculationService } from './calculationService';
 
 export class ScenarioService {
   private db: Pool;
+  private calculationService: CalculationService;
 
   constructor(db: Pool) {
     this.db = db;
+    this.calculationService = new CalculationService();
   }
 
   /**
@@ -247,6 +250,56 @@ export class ScenarioService {
   }
 
   /**
+   * Calculate and store results for a scenario
+   */
+  async calculateAndStoreResults(scenarioId: string): Promise<Scenario | null> {
+    const scenario = await this.getScenario(scenarioId);
+    if (!scenario) {
+      return null;
+    }
+
+    const calculations: CalculationResults = {};
+    const loanData = scenario.loanData;
+
+    // Calculate loan metrics if we have the required data
+    if (loanData.loan?.loanAmount && loanData.property?.estimatedValue && loanData.borrower?.annualIncome) {
+      try {
+        const metricsResult = this.calculationService.calculateLoanMetrics({
+          loanAmount: loanData.loan.loanAmount,
+          propertyValue: loanData.property.estimatedValue || loanData.property.purchasePrice || 0,
+          borrowerIncome: loanData.borrower.annualIncome,
+          existingMonthlyDebt: 0, // Would need to add this to loan data
+          interestRate: 6.5, // Would need to add rate to loan data
+          termMonths: loanData.loan.termMonths || 360
+        });
+
+        calculations.loanMetrics = {
+          loanToValue: metricsResult.loanToValue,
+          debtToIncome: metricsResult.debtToIncome,
+          monthlyPayment: metricsResult.monthlyPayment,
+          totalInterest: metricsResult.totalInterest,
+          affordabilityScore: metricsResult.affordabilityScore,
+          maxLoanAmount: metricsResult.maxLoanAmount,
+          recommendations: [],
+          calculatedAt: new Date()
+        };
+      } catch (error) {
+        logger.error('Failed to calculate loan metrics', { scenarioId, error });
+      }
+    }
+
+    // Store calculations in the scenario
+    const updatedScenario = await this.updateScenario(scenarioId, {
+      loanData: {
+        ...loanData,
+        calculations
+      }
+    });
+
+    return updatedScenario;
+  }
+
+  /**
    * Helper to map database row to Scenario type
    */
   private mapRowToScenario(row: any): Scenario {
@@ -257,6 +310,7 @@ export class ScenarioService {
       description: row.description,
       status: row.status,
       loanData: row.loan_data,
+      calculations: row.loan_data?.calculations,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       createdBy: row.created_by,

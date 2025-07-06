@@ -47,11 +47,49 @@ export interface Scenario {
   description?: string;
   status: ScenarioStatus;
   loanData: LoanData;
+  calculations?: CalculationResults;
   createdAt: Date;
   updatedAt: Date;
   createdBy?: string;
   updatedBy?: string;
   deletedAt?: Date;
+}
+
+export interface CalculationResults {
+  loanMetrics?: {
+    loanToValue: number;
+    debtToIncome: number;
+    monthlyPayment: number;
+    totalInterest: number;
+    affordabilityScore: number;
+    maxLoanAmount: number;
+    recommendations: string[];
+    calculatedAt: Date;
+  };
+  dscr?: {
+    ratio: number;
+    netOperatingIncome: number;
+    totalDebtService: number;
+    cashFlow: number;
+    approved: boolean;
+    capRate?: number;
+    cashOnCashReturn?: number;
+    calculatedAt: Date;
+  };
+  armAnalysis?: {
+    fixedPeriodPayment: number;
+    worstCasePayment: number;
+    breakEvenMonth: number;
+    recommendation: string;
+    calculatedAt: Date;
+  };
+  refinanceAnalysis?: {
+    monthlySavings: number;
+    breakEvenMonth: number;
+    lifetimeSavings: number;
+    shouldRefinance: boolean;
+    calculatedAt: Date;
+  };
 }
 
 export interface CreateScenarioDTO {

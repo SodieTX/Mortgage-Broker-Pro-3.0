@@ -147,4 +147,28 @@ export async function scenarioRoutes(server: FastifyInstance) {
       });
     }
   });
+  
+  // Calculate and store results for a scenario
+  server.post<{
+    Params: { id: string }
+  }>('/scenarios/:id/calculate', async (request, reply) => {
+    try {
+      const scenario = await scenarioService.calculateAndStoreResults(request.params.id);
+      
+      if (!scenario) {
+        return reply.code(404).send({ error: 'Scenario not found' });
+      }
+      
+      return reply.send({
+        scenario,
+        calculations: scenario.calculations
+      });
+    } catch (error) {
+      request.log.error('Failed to calculate scenario results', error);
+      return reply.code(500).send({ 
+        error: 'Failed to calculate scenario results',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
 }
