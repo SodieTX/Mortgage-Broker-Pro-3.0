@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<!-- saved from url=(1526)https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/48152090/1eb214bb-757c-40bc-a65d-298beb8778c0/emc2-complete-dictionary.html?AWSAccessKeyId=ASIA2F3EMEYE55J6PDOK&Signature=KUAimjjRYVA7Dx3M87t6WGGghYA%3D&x-amz-security-token=IQoJb3JpZ2luX2VjEEUaCXVzLWVhc3QtMSJGMEQCIEU6gpFGKV8IapJTVlx1wJBM555fqTHW%2BQodXUo%2BTDQzAiAm%2BLd0Mm2LE4P3H%2BWKzhVVRtNW67INsHFZRct4goPfbSrxBAhOEAEaDDY5OTc1MzMwOTcwNSIMDErl%2FiO9BlBvCb54Ks4EynCpgqMHY5BfEWc0NI2shcEU7dmPOLmWdfHGz6NWgETws34lmJgKDiyPICVi1ZlZQAhB2DWNebDreSFwHadh4AjQrDcoIFRNFPJttS%2BNsY76fMi5%2F5ONGis2AbZyydxEBWmcUIie%2F3t02wGWX%2FhOZ37RqmpXjuEjZQnBj3ij1bbnq6qmdzKdzwyNoqxWETEH5AdJ5Z1mwaySHF%2Bn5MOzOgL7GsghAlSmHOybsB2igGfTdAKfJIS2jSsuilRFmTc8MABm%2BmuzGKvDLKBy%2FEC0dn9zgPhWy%2BSTtEvaVzTU8gdCIanKEln7a2PUvnKHA1OLLIfto1UD6sodGYfKqYigPhaffdwzAqKscLE1sRSZoi13nUl5XE1QimJu2XRk8%2BkrPEQmGMZArQzeYihVb4Z0cP5XBMij2h2L5o%2FtpbzgG3eceWXYZoxjuwjyI92ecRQDaEQpctCUIQ1s9vvbfo6QqoM2kGmH0URobkj%2FLLQ6l7wIbfhBteilU9yC6m4JgoIL11IPXI7s4h6fJTlSohnjuFnrUwiEuxbA1M%2BxqVHW5hWqEtSgi4OxS4S2TWveNO8g4NY9S521Aa3gTc1HuRMA5Z2xsN4rJbRsPuTEZcrrwLhn%2FDc4Uo%2BfNfQvmJlWIT5rpeseuQuga2LQVAPjczSM0JwO1q%2FPEhilLlA8WTLdwsiaIxtEE%2FEivDZSA5mvnkdODuZLTD%2BsoUZewurEzyimxF%2FG9dDebVnyN46FYdYf1kbRRspwJssNm5uVYr%2BCrOn%2FzHu5kiZCWUOVv0gzJQwwkaOmwwY6mwG%2F5eQtgpcYfUfwSetwy42dVnCOaUjR%2BE8%2F3sfAuxTQMmQIgaug%2FVBBWY8lQL0thpJ311EWvaUrGt53Frg%2F1kfTAQDyhQQO1Lxsh3koe%2FbtLOkIC4QQUULLQ%2B81q7N73HqaWyBvzq6IbAQZyqNK3eu3p0JN9cXyPsn%2FaqUpFdLX%2F6vzyiW3Mko5gzSu17IXZacQsNsCf4DQXPh4ow%3D%3D&Expires=1751749965 -->
+<html data-google-analytics-opt-out=""><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+    <title>E=mc² Complete Data Dictionary</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #2c5aa0; }
+        h2 { color: #5a5a5a; margin-top: 30px; }
+        h3 { color: #7a7a7a; margin-top: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 30px; }
+        th { background-color: #2c5aa0; color: white; padding: 10px; text-align: left; }
+        td { border: 1px solid #ddd; padding: 8px; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        .section { margin-bottom: 50px; }
+        .note { background-color: #fffacd; padding: 10px; margin: 10px 0; border-left: 4px solid #ffd700; }
+        .critical { background-color: #ffe4e1; padding: 10px; margin: 10px 0; border-left: 4px solid #dc143c; }
+    </style>
+</head>
+<body>
+    <h1>E=mc² Lending Core - Complete Data Dictionary</h1>
+    <p><strong>Generated from the full conversation covering EVERYTHING</strong></p>
+    
+    <div class="note">
+        <strong>Engineering Standards:</strong>
+        <ul>
+            <li>Primary Keys: Always named <code>TableName_ID</code></li>
+            <li>Foreign Keys: Include parent table name</li>
+            <li>Timestamps: End with <code>_At</code></li>
+            <li>All tables use singular names with snake_case columns</li>
+            <li>Hard deletes are blocked by triggers - use Active flags</li>
+        </ul>
+    </div>
+
+    <h2>Table of Contents</h2>
+    <ul>
+        <li><a href="https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/48152090/1eb214bb-757c-40bc-a65d-298beb8778c0/emc2-complete-dictionary.html?AWSAccessKeyId=ASIA2F3EMEYE55J6PDOK&amp;Signature=KUAimjjRYVA7Dx3M87t6WGGghYA%3D&amp;x-amz-security-token=IQoJb3JpZ2luX2VjEEUaCXVzLWVhc3QtMSJGMEQCIEU6gpFGKV8IapJTVlx1wJBM555fqTHW%2BQodXUo%2BTDQzAiAm%2BLd0Mm2LE4P3H%2BWKzhVVRtNW67INsHFZRct4goPfbSrxBAhOEAEaDDY5OTc1MzMwOTcwNSIMDErl%2FiO9BlBvCb54Ks4EynCpgqMHY5BfEWc0NI2shcEU7dmPOLmWdfHGz6NWgETws34lmJgKDiyPICVi1ZlZQAhB2DWNebDreSFwHadh4AjQrDcoIFRNFPJttS%2BNsY76fMi5%2F5ONGis2AbZyydxEBWmcUIie%2F3t02wGWX%2FhOZ37RqmpXjuEjZQnBj3ij1bbnq6qmdzKdzwyNoqxWETEH5AdJ5Z1mwaySHF%2Bn5MOzOgL7GsghAlSmHOybsB2igGfTdAKfJIS2jSsuilRFmTc8MABm%2BmuzGKvDLKBy%2FEC0dn9zgPhWy%2BSTtEvaVzTU8gdCIanKEln7a2PUvnKHA1OLLIfto1UD6sodGYfKqYigPhaffdwzAqKscLE1sRSZoi13nUl5XE1QimJu2XRk8%2BkrPEQmGMZArQzeYihVb4Z0cP5XBMij2h2L5o%2FtpbzgG3eceWXYZoxjuwjyI92ecRQDaEQpctCUIQ1s9vvbfo6QqoM2kGmH0URobkj%2FLLQ6l7wIbfhBteilU9yC6m4JgoIL11IPXI7s4h6fJTlSohnjuFnrUwiEuxbA1M%2BxqVHW5hWqEtSgi4OxS4S2TWveNO8g4NY9S521Aa3gTc1HuRMA5Z2xsN4rJbRsPuTEZcrrwLhn%2FDc4Uo%2BfNfQvmJlWIT5rpeseuQuga2LQVAPjczSM0JwO1q%2FPEhilLlA8WTLdwsiaIxtEE%2FEivDZSA5mvnkdODuZLTD%2BsoUZewurEzyimxF%2FG9dDebVnyN46FYdYf1kbRRspwJssNm5uVYr%2BCrOn%2FzHu5kiZCWUOVv0gzJQwwkaOmwwY6mwG%2F5eQtgpcYfUfwSetwy42dVnCOaUjR%2BE8%2F3sfAuxTQMmQIgaug%2FVBBWY8lQL0thpJ311EWvaUrGt53Frg%2F1kfTAQDyhQQO1Lxsh3koe%2FbtLOkIC4QQUULLQ%2B81q7N73HqaWyBvzq6IbAQZyqNK3eu3p0JN9cXyPsn%2FaqUpFdLX%2F6vzyiW3Mko5gzSu17IXZacQsNsCf4DQXPh4ow%3D%3D&amp;Expires=1751749965#core">Core Reference Tables</a></li>
+        <li><a href="https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/48152090/1eb214bb-757c-40bc-a65d-298beb8778c0/emc2-complete-dictionary.html?AWSAccessKeyId=ASIA2F3EMEYE55J6PDOK&amp;Signature=KUAimjjRYVA7Dx3M87t6WGGghYA%3D&amp;x-amz-security-token=IQoJb3JpZ2luX2VjEEUaCXVzLWVhc3QtMSJGMEQCIEU6gpFGKV8IapJTVlx1wJBM555fqTHW%2BQodXUo%2BTDQzAiAm%2BLd0Mm2LE4P3H%2BWKzhVVRtNW67INsHFZRct4goPfbSrxBAhOEAEaDDY5OTc1MzMwOTcwNSIMDErl%2FiO9BlBvCb54Ks4EynCpgqMHY5BfEWc0NI2shcEU7dmPOLmWdfHGz6NWgETws34lmJgKDiyPICVi1ZlZQAhB2DWNebDreSFwHadh4AjQrDcoIFRNFPJttS%2BNsY76fMi5%2F5ONGis2AbZyydxEBWmcUIie%2F3t02wGWX%2FhOZ37RqmpXjuEjZQnBj3ij1bbnq6qmdzKdzwyNoqxWETEH5AdJ5Z1mwaySHF%2Bn5MOzOgL7GsghAlSmHOybsB2igGfTdAKfJIS2jSsuilRFmTc8MABm%2BmuzGKvDLKBy%2FEC0dn9zgPhWy%2BSTtEvaVzTU8gdCIanKEln7a2PUvnKHA1OLLIfto1UD6sodGYfKqYigPhaffdwzAqKscLE1sRSZoi13nUl5XE1QimJu2XRk8%2BkrPEQmGMZArQzeYihVb4Z0cP5XBMij2h2L5o%2FtpbzgG3eceWXYZoxjuwjyI92ecRQDaEQpctCUIQ1s9vvbfo6QqoM2kGmH0URobkj%2FLLQ6l7wIbfhBteilU9yC6m4JgoIL11IPXI7s4h6fJTlSohnjuFnrUwiEuxbA1M%2BxqVHW5hWqEtSgi4OxS4S2TWveNO8g4NY9S521Aa3gTc1HuRMA5Z2xsN4rJbRsPuTEZcrrwLhn%2FDc4Uo%2BfNfQvmJlWIT5rpeseuQuga2LQVAPjczSM0JwO1q%2FPEhilLlA8WTLdwsiaIxtEE%2FEivDZSA5mvnkdODuZLTD%2BsoUZewurEzyimxF%2FG9dDebVnyN46FYdYf1kbRRspwJssNm5uVYr%2BCrOn%2FzHu5kiZCWUOVv0gzJQwwkaOmwwY6mwG%2F5eQtgpcYfUfwSetwy42dVnCOaUjR%2BE8%2F3sfAuxTQMmQIgaug%2FVBBWY8lQL0thpJ311EWvaUrGt53Frg%2F1kfTAQDyhQQO1Lxsh3koe%2FbtLOkIC4QQUULLQ%2B81q7N73HqaWyBvzq6IbAQZyqNK3eu3p0JN9cXyPsn%2FaqUpFdLX%2F6vzyiW3Mko5gzSu17IXZacQsNsCf4DQXPh4ow%3D%3D&amp;Expires=1751749965#cards">Cards &amp; Templates System</a></li>
+        <li><a href="https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/48152090/1eb214bb-757c-40bc-a65d-298beb8778c0/emc2-complete-dictionary.html?AWSAccessKeyId=ASIA2F3EMEYE55J6PDOK&amp;Signature=KUAimjjRYVA7Dx3M87t6WGGghYA%3D&amp;x-amz-security-token=IQoJb3JpZ2luX2VjEEUaCXVzLWVhc3QtMSJGMEQCIEU6gpFGKV8IapJTVlx1wJBM555fqTHW%2BQodXUo%2BTDQzAiAm%2BLd0Mm2LE4P3H%2BWKzhVVRtNW67INsHFZRct4goPfbSrxBAhOEAEaDDY5OTc1MzMwOTcwNSIMDErl%2FiO9BlBvCb54Ks4EynCpgqMHY5BfEWc0NI2shcEU7dmPOLmWdfHGz6NWgETws34lmJgKDiyPICVi1ZlZQAhB2DWNebDreSFwHadh4AjQrDcoIFRNFPJttS%2BNsY76fMi5%2F5ONGis2AbZyydxEBWmcUIie%2F3t02wGWX%2FhOZ37RqmpXjuEjZQnBj3ij1bbnq6qmdzKdzwyNoqxWETEH5AdJ5Z1mwaySHF%2Bn5MOzOgL7GsghAlSmHOybsB2igGfTdAKfJIS2jSsuilRFmTc8MABm%2BmuzGKvDLKBy%2FEC0dn9zgPhWy%2BSTtEvaVzTU8gdCIanKEln7a2PUvnKHA1OLLIfto1UD6sodGYfKqYigPhaffdwzAqKscLE1sRSZoi13nUl5XE1QimJu2XRk8%2BkrPEQmGMZArQzeYihVb4Z0cP5XBMij2h2L5o%2FtpbzgG3eceWXYZoxjuwjyI92ecRQDaEQpctCUIQ1s9vvbfo6QqoM2kGmH0URobkj%2FLLQ6l7wIbfhBteilU9yC6m4JgoIL11IPXI7s4h6fJTlSohnjuFnrUwiEuxbA1M%2BxqVHW5hWqEtSgi4OxS4S2TWveNO8g4NY9S521Aa3gTc1HuRMA5Z2xsN4rJbRsPuTEZcrrwLhn%2FDc4Uo%2BfNfQvmJlWIT5rpeseuQuga2LQVAPjczSM0JwO1q%2FPEhilLlA8WTLdwsiaIxtEE%2FEivDZSA5mvnkdODuZLTD%2BsoUZewurEzyimxF%2FG9dDebVnyN46FYdYf1kbRRspwJssNm5uVYr%2BCrOn%2FzHu5kiZCWUOVv0gzJQwwkaOmwwY6mwG%2F5eQtgpcYfUfwSetwy42dVnCOaUjR%2BE8%2F3sfAuxTQMmQIgaug%2FVBBWY8lQL0thpJ311EWvaUrGt53Frg%2F1kfTAQDyhQQO1Lxsh3koe%2FbtLOkIC4QQUULLQ%2B81q7N73HqaWyBvzq6IbAQZyqNK3eu3p0JN9cXyPsn%2FaqUpFdLX%2F6vzyiW3Mko5gzSu17IXZacQsNsCf4DQXPh4ow%3D%3D&amp;Expires=1751749965#geographic">Geographic Coverage</a></li>
+        <li><a href="https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/48152090/1eb214bb-757c-40bc-a65d-298beb8778c0/emc2-complete-dictionary.html?AWSAccessKeyId=ASIA2F3EMEYE55J6PDOK&amp;Signature=KUAimjjRYVA7Dx3M87t6WGGghYA%3D&amp;x-amz-security-token=IQoJb3JpZ2luX2VjEEUaCXVzLWVhc3QtMSJGMEQCIEU6gpFGKV8IapJTVlx1wJBM555fqTHW%2BQodXUo%2BTDQzAiAm%2BLd0Mm2LE4P3H%2BWKzhVVRtNW67INsHFZRct4goPfbSrxBAhOEAEaDDY5OTc1MzMwOTcwNSIMDErl%2FiO9BlBvCb54Ks4EynCpgqMHY5BfEWc0NI2shcEU7dmPOLmWdfHGz6NWgETws34lmJgKDiyPICVi1ZlZQAhB2DWNebDreSFwHadh4AjQrDcoIFRNFPJttS%2BNsY76fMi5%2F5ONGis2AbZyydxEBWmcUIie%2F3t02wGWX%2FhOZ37RqmpXjuEjZQnBj3ij1bbnq6qmdzKdzwyNoqxWETEH5AdJ5Z1mwaySHF%2Bn5MOzOgL7GsghAlSmHOybsB2igGfTdAKfJIS2jSsuilRFmTc8MABm%2BmuzGKvDLKBy%2FEC0dn9zgPhWy%2BSTtEvaVzTU8gdCIanKEln7a2PUvnKHA1OLLIfto1UD6sodGYfKqYigPhaffdwzAqKscLE1sRSZoi13nUl5XE1QimJu2XRk8%2BkrPEQmGMZArQzeYihVb4Z0cP5XBMij2h2L5o%2FtpbzgG3eceWXYZoxjuwjyI92ecRQDaEQpctCUIQ1s9vvbfo6QqoM2kGmH0URobkj%2FLLQ6l7wIbfhBteilU9yC6m4JgoIL11IPXI7s4h6fJTlSohnjuFnrUwiEuxbA1M%2BxqVHW5hWqEtSgi4OxS4S2TWveNO8g4NY9S521Aa3gTc1HuRMA5Z2xsN4rJbRsPuTEZcrrwLhn%2FDc4Uo%2BfNfQvmJlWIT5rpeseuQuga2LQVAPjczSM0JwO1q%2FPEhilLlA8WTLdwsiaIxtEE%2FEivDZSA5mvnkdODuZLTD%2BsoUZewurEzyimxF%2FG9dDebVnyN46FYdYf1kbRRspwJssNm5uVYr%2BCrOn%2FzHu5kiZCWUOVv0gzJQwwkaOmwwY6mwG%2F5eQtgpcYfUfwSetwy42dVnCOaUjR%2BE8%2F3sfAuxTQMmQIgaug%2FVBBWY8lQL0thpJ311EWvaUrGt53Frg%2F1kfTAQDyhQQO1Lxsh3koe%2FbtLOkIC4QQUULLQ%2B81q7N73HqaWyBvzq6IbAQZyqNK3eu3p0JN9cXyPsn%2FaqUpFdLX%2F6vzyiW3Mko5gzSu17IXZacQsNsCf4DQXPh4ow%3D%3D&amp;Expires=1751749965#pricing">Pricing &amp; Financial</a></li>
+        <li><a href="https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/48152090/1eb214bb-757c-40bc-a65d-298beb8778c0/emc2-complete-dictionary.html?AWSAccessKeyId=ASIA2F3EMEYE55J6PDOK&amp;Signature=KUAimjjRYVA7Dx3M87t6WGGghYA%3D&amp;x-amz-security-token=IQoJb3JpZ2luX2VjEEUaCXVzLWVhc3QtMSJGMEQCIEU6gpFGKV8IapJTVlx1wJBM555fqTHW%2BQodXUo%2BTDQzAiAm%2BLd0Mm2LE4P3H%2BWKzhVVRtNW67INsHFZRct4goPfbSrxBAhOEAEaDDY5OTc1MzMwOTcwNSIMDErl%2FiO9BlBvCb54Ks4EynCpgqMHY5BfEWc0NI2shcEU7dmPOLmWdfHGz6NWgETws34lmJgKDiyPICVi1ZlZQAhB2DWNebDreSFwHadh4AjQrDcoIFRNFPJttS%2BNsY76fMi5%2F5ONGis2AbZyydxEBWmcUIie%2F3t02wGWX%2FhOZ37RqmpXjuEjZQnBj3ij1bbnq6qmdzKdzwyNoqxWETEH5AdJ5Z1mwaySHF%2Bn5MOzOgL7GsghAlSmHOybsB2igGfTdAKfJIS2jSsuilRFmTc8MABm%2BmuzGKvDLKBy%2FEC0dn9zgPhWy%2BSTtEvaVzTU8gdCIanKEln7a2PUvnKHA1OLLIfto1UD6sodGYfKqYigPhaffdwzAqKscLE1sRSZoi13nUl5XE1QimJu2XRk8%2BkrPEQmGMZArQzeYihVb4Z0cP5XBMij2h2L5o%2FtpbzgG3eceWXYZoxjuwjyI92ecRQDaEQpctCUIQ1s9vvbfo6QqoM2kGmH0URobkj%2FLLQ6l7wIbfhBteilU9yC6m4JgoIL11IPXI7s4h6fJTlSohnjuFnrUwiEuxbA1M%2BxqVHW5hWqEtSgi4OxS4S2TWveNO8g4NY9S521Aa3gTc1HuRMA5Z2xsN4rJbRsPuTEZcrrwLhn%2FDc4Uo%2BfNfQvmJlWIT5rpeseuQuga2LQVAPjczSM0JwO1q%2FPEhilLlA8WTLdwsiaIxtEE%2FEivDZSA5mvnkdODuZLTD%2BsoUZewurEzyimxF%2FG9dDebVnyN46FYdYf1kbRRspwJssNm5uVYr%2BCrOn%2FzHu5kiZCWUOVv0gzJQwwkaOmwwY6mwG%2F5eQtgpcYfUfwSetwy42dVnCOaUjR%2BE8%2F3sfAuxTQMmQIgaug%2FVBBWY8lQL0thpJ311EWvaUrGt53Frg%2F1kfTAQDyhQQO1Lxsh3koe%2FbtLOkIC4QQUULLQ%2B81q7N73HqaWyBvzq6IbAQZyqNK3eu3p0JN9cXyPsn%2FaqUpFdLX%2F6vzyiW3Mko5gzSu17IXZacQsNsCf4DQXPh4ow%3D%3D&amp;Expires=1751749965#scenario">Scenario Lifecycle</a></li>
+        <li><a href="https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/48152090/1eb214bb-757c-40bc-a65d-298beb8778c0/emc2-complete-dictionary.html?AWSAccessKeyId=ASIA2F3EMEYE55J6PDOK&amp;Signature=KUAimjjRYVA7Dx3M87t6WGGghYA%3D&amp;x-amz-security-token=IQoJb3JpZ2luX2VjEEUaCXVzLWVhc3QtMSJGMEQCIEU6gpFGKV8IapJTVlx1wJBM555fqTHW%2BQodXUo%2BTDQzAiAm%2BLd0Mm2LE4P3H%2BWKzhVVRtNW67INsHFZRct4goPfbSrxBAhOEAEaDDY5OTc1MzMwOTcwNSIMDErl%2FiO9BlBvCb54Ks4EynCpgqMHY5BfEWc0NI2shcEU7dmPOLmWdfHGz6NWgETws34lmJgKDiyPICVi1ZlZQAhB2DWNebDreSFwHadh4AjQrDcoIFRNFPJttS%2BNsY76fMi5%2F5ONGis2AbZyydxEBWmcUIie%2F3t02wGWX%2FhOZ37RqmpXjuEjZQnBj3ij1bbnq6qmdzKdzwyNoqxWETEH5AdJ5Z1mwaySHF%2Bn5MOzOgL7GsghAlSmHOybsB2igGfTdAKfJIS2jSsuilRFmTc8MABm%2BmuzGKvDLKBy%2FEC0dn9zgPhWy%2BSTtEvaVzTU8gdCIanKEln7a2PUvnKHA1OLLIfto1UD6sodGYfKqYigPhaffdwzAqKscLE1sRSZoi13nUl5XE1QimJu2XRk8%2BkrPEQmGMZArQzeYihVb4Z0cP5XBMij2h2L5o%2FtpbzgG3eceWXYZoxjuwjyI92ecRQDaEQpctCUIQ1s9vvbfo6QqoM2kGmH0URobkj%2FLLQ6l7wIbfhBteilU9yC6m4JgoIL11IPXI7s4h6fJTlSohnjuFnrUwiEuxbA1M%2BxqVHW5hWqEtSgi4OxS4S2TWveNO8g4NY9S521Aa3gTc1HuRMA5Z2xsN4rJbRsPuTEZcrrwLhn%2FDc4Uo%2BfNfQvmJlWIT5rpeseuQuga2LQVAPjczSM0JwO1q%2FPEhilLlA8WTLdwsiaIxtEE%2FEivDZSA5mvnkdODuZLTD%2BsoUZewurEzyimxF%2FG9dDebVnyN46FYdYf1kbRRspwJssNm5uVYr%2BCrOn%2FzHu5kiZCWUOVv0gzJQwwkaOmwwY6mwG%2F5eQtgpcYfUfwSetwy42dVnCOaUjR%2BE8%2F3sfAuxTQMmQIgaug%2FVBBWY8lQL0thpJ311EWvaUrGt53Frg%2F1kfTAQDyhQQO1Lxsh3koe%2FbtLOkIC4QQUULLQ%2B81q7N73HqaWyBvzq6IbAQZyqNK3eu3p0JN9cXyPsn%2FaqUpFdLX%2F6vzyiW3Mko5gzSu17IXZacQsNsCf4DQXPh4ow%3D%3D&amp;Expires=1751749965#borrower">Borrower &amp; Property</a></li>
+        <li><a href="https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/48152090/1eb214bb-757c-40bc-a65d-298beb8778c0/emc2-complete-dictionary.html?AWSAccessKeyId=ASIA2F3EMEYE55J6PDOK&amp;Signature=KUAimjjRYVA7Dx3M87t6WGGghYA%3D&amp;x-amz-security-token=IQoJb3JpZ2luX2VjEEUaCXVzLWVhc3QtMSJGMEQCIEU6gpFGKV8IapJTVlx1wJBM555fqTHW%2BQodXUo%2BTDQzAiAm%2BLd0Mm2LE4P3H%2BWKzhVVRtNW67INsHFZRct4goPfbSrxBAhOEAEaDDY5OTc1MzMwOTcwNSIMDErl%2FiO9BlBvCb54Ks4EynCpgqMHY5BfEWc0NI2shcEU7dmPOLmWdfHGz6NWgETws34lmJgKDiyPICVi1ZlZQAhB2DWNebDreSFwHadh4AjQrDcoIFRNFPJttS%2BNsY76fMi5%2F5ONGis2AbZyydxEBWmcUIie%2F3t02wGWX%2FhOZ37RqmpXjuEjZQnBj3ij1bbnq6qmdzKdzwyNoqxWETEH5AdJ5Z1mwaySHF%2Bn5MOzOgL7GsghAlSmHOybsB2igGfTdAKfJIS2jSsuilRFmTc8MABm%2BmuzGKvDLKBy%2FEC0dn9zgPhWy%2BSTtEvaVzTU8gdCIanKEln7a2PUvnKHA1OLLIfto1UD6sodGYfKqYigPhaffdwzAqKscLE1sRSZoi13nUl5XE1QimJu2XRk8%2BkrPEQmGMZArQzeYihVb4Z0cP5XBMij2h2L5o%2FtpbzgG3eceWXYZoxjuwjyI92ecRQDaEQpctCUIQ1s9vvbfo6QqoM2kGmH0URobkj%2FLLQ6l7wIbfhBteilU9yC6m4JgoIL11IPXI7s4h6fJTlSohnjuFnrUwiEuxbA1M%2BxqVHW5hWqEtSgi4OxS4S2TWveNO8g4NY9S521Aa3gTc1HuRMA5Z2xsN4rJbRsPuTEZcrrwLhn%2FDc4Uo%2BfNfQvmJlWIT5rpeseuQuga2LQVAPjczSM0JwO1q%2FPEhilLlA8WTLdwsiaIxtEE%2FEivDZSA5mvnkdODuZLTD%2BsoUZewurEzyimxF%2FG9dDebVnyN46FYdYf1kbRRspwJssNm5uVYr%2BCrOn%2FzHu5kiZCWUOVv0gzJQwwkaOmwwY6mwG%2F5eQtgpcYfUfwSetwy42dVnCOaUjR%2BE8%2F3sfAuxTQMmQIgaug%2FVBBWY8lQL0thpJ311EWvaUrGt53Frg%2F1kfTAQDyhQQO1Lxsh3koe%2FbtLOkIC4QQUULLQ%2B81q7N73HqaWyBvzq6IbAQZyqNK3eu3p0JN9cXyPsn%2FaqUpFdLX%2F6vzyiW3Mko5gzSu17IXZacQsNsCf4DQXPh4ow%3D%3D&amp;Expires=1751749965#collateral">Collateral &amp; Tokenization</a></li>
+        <li><a href="https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/48152090/1eb214bb-757c-40bc-a65d-298beb8778c0/emc2-complete-dictionary.html?AWSAccessKeyId=ASIA2F3EMEYE55J6PDOK&amp;Signature=KUAimjjRYVA7Dx3M87t6WGGghYA%3D&amp;x-amz-security-token=IQoJb3JpZ2luX2VjEEUaCXVzLWVhc3QtMSJGMEQCIEU6gpFGKV8IapJTVlx1wJBM555fqTHW%2BQodXUo%2BTDQzAiAm%2BLd0Mm2LE4P3H%2BWKzhVVRtNW67INsHFZRct4goPfbSrxBAhOEAEaDDY5OTc1MzMwOTcwNSIMDErl%2FiO9BlBvCb54Ks4EynCpgqMHY5BfEWc0NI2shcEU7dmPOLmWdfHGz6NWgETws34lmJgKDiyPICVi1ZlZQAhB2DWNebDreSFwHadh4AjQrDcoIFRNFPJttS%2BNsY76fMi5%2F5ONGis2AbZyydxEBWmcUIie%2F3t02wGWX%2FhOZ37RqmpXjuEjZQnBj3ij1bbnq6qmdzKdzwyNoqxWETEH5AdJ5Z1mwaySHF%2Bn5MOzOgL7GsghAlSmHOybsB2igGfTdAKfJIS2jSsuilRFmTc8MABm%2BmuzGKvDLKBy%2FEC0dn9zgPhWy%2BSTtEvaVzTU8gdCIanKEln7a2PUvnKHA1OLLIfto1UD6sodGYfKqYigPhaffdwzAqKscLE1sRSZoi13nUl5XE1QimJu2XRk8%2BkrPEQmGMZArQzeYihVb4Z0cP5XBMij2h2L5o%2FtpbzgG3eceWXYZoxjuwjyI92ecRQDaEQpctCUIQ1s9vvbfo6QqoM2kGmH0URobkj%2FLLQ6l7wIbfhBteilU9yC6m4JgoIL11IPXI7s4h6fJTlSohnjuFnrUwiEuxbA1M%2BxqVHW5hWqEtSgi4OxS4S2TWveNO8g4NY9S521Aa3gTc1HuRMA5Z2xsN4rJbRsPuTEZcrrwLhn%2FDc4Uo%2BfNfQvmJlWIT5rpeseuQuga2LQVAPjczSM0JwO1q%2FPEhilLlA8WTLdwsiaIxtEE%2FEivDZSA5mvnkdODuZLTD%2BsoUZewurEzyimxF%2FG9dDebVnyN46FYdYf1kbRRspwJssNm5uVYr%2BCrOn%2FzHu5kiZCWUOVv0gzJQwwkaOmwwY6mwG%2F5eQtgpcYfUfwSetwy42dVnCOaUjR%2BE8%2F3sfAuxTQMmQIgaug%2FVBBWY8lQL0thpJ311EWvaUrGt53Frg%2F1kfTAQDyhQQO1Lxsh3koe%2FbtLOkIC4QQUULLQ%2B81q7N73HqaWyBvzq6IbAQZyqNK3eu3p0JN9cXyPsn%2FaqUpFdLX%2F6vzyiW3Mko5gzSu17IXZacQsNsCf4DQXPh4ow%3D%3D&amp;Expires=1751749965#conditional">Conditional Logic Engine</a></li>
+        <li><a href="https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/48152090/1eb214bb-757c-40bc-a65d-298beb8778c0/emc2-complete-dictionary.html?AWSAccessKeyId=ASIA2F3EMEYE55J6PDOK&amp;Signature=KUAimjjRYVA7Dx3M87t6WGGghYA%3D&amp;x-amz-security-token=IQoJb3JpZ2luX2VjEEUaCXVzLWVhc3QtMSJGMEQCIEU6gpFGKV8IapJTVlx1wJBM555fqTHW%2BQodXUo%2BTDQzAiAm%2BLd0Mm2LE4P3H%2BWKzhVVRtNW67INsHFZRct4goPfbSrxBAhOEAEaDDY5OTc1MzMwOTcwNSIMDErl%2FiO9BlBvCb54Ks4EynCpgqMHY5BfEWc0NI2shcEU7dmPOLmWdfHGz6NWgETws34lmJgKDiyPICVi1ZlZQAhB2DWNebDreSFwHadh4AjQrDcoIFRNFPJttS%2BNsY76fMi5%2F5ONGis2AbZyydxEBWmcUIie%2F3t02wGWX%2FhOZ37RqmpXjuEjZQnBj3ij1bbnq6qmdzKdzwyNoqxWETEH5AdJ5Z1mwaySHF%2Bn5MOzOgL7GsghAlSmHOybsB2igGfTdAKfJIS2jSsuilRFmTc8MABm%2BmuzGKvDLKBy%2FEC0dn9zgPhWy%2BSTtEvaVzTU8gdCIanKEln7a2PUvnKHA1OLLIfto1UD6sodGYfKqYigPhaffdwzAqKscLE1sRSZoi13nUl5XE1QimJu2XRk8%2BkrPEQmGMZArQzeYihVb4Z0cP5XBMij2h2L5o%2FtpbzgG3eceWXYZoxjuwjyI92ecRQDaEQpctCUIQ1s9vvbfo6QqoM2kGmH0URobkj%2FLLQ6l7wIbfhBteilU9yC6m4JgoIL11IPXI7s4h6fJTlSohnjuFnrUwiEuxbA1M%2BxqVHW5hWqEtSgi4OxS4S2TWveNO8g4NY9S521Aa3gTc1HuRMA5Z2xsN4rJbRsPuTEZcrrwLhn%2FDc4Uo%2BfNfQvmJlWIT5rpeseuQuga2LQVAPjczSM0JwO1q%2FPEhilLlA8WTLdwsiaIxtEE%2FEivDZSA5mvnkdODuZLTD%2BsoUZewurEzyimxF%2FG9dDebVnyN46FYdYf1kbRRspwJssNm5uVYr%2BCrOn%2FzHu5kiZCWUOVv0gzJQwwkaOmwwY6mwG%2F5eQtgpcYfUfwSetwy42dVnCOaUjR%2BE8%2F3sfAuxTQMmQIgaug%2FVBBWY8lQL0thpJ311EWvaUrGt53Frg%2F1kfTAQDyhQQO1Lxsh3koe%2FbtLOkIC4QQUULLQ%2B81q7N73HqaWyBvzq6IbAQZyqNK3eu3p0JN9cXyPsn%2FaqUpFdLX%2F6vzyiW3Mko5gzSu17IXZacQsNsCf4DQXPh4ow%3D%3D&amp;Expires=1751749965#exception">Exception Handling</a></li>
+        <li><a href="https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/48152090/1eb214bb-757c-40bc-a65d-298beb8778c0/emc2-complete-dictionary.html?AWSAccessKeyId=ASIA2F3EMEYE55J6PDOK&amp;Signature=KUAimjjRYVA7Dx3M87t6WGGghYA%3D&amp;x-amz-security-token=IQoJb3JpZ2luX2VjEEUaCXVzLWVhc3QtMSJGMEQCIEU6gpFGKV8IapJTVlx1wJBM555fqTHW%2BQodXUo%2BTDQzAiAm%2BLd0Mm2LE4P3H%2BWKzhVVRtNW67INsHFZRct4goPfbSrxBAhOEAEaDDY5OTc1MzMwOTcwNSIMDErl%2FiO9BlBvCb54Ks4EynCpgqMHY5BfEWc0NI2shcEU7dmPOLmWdfHGz6NWgETws34lmJgKDiyPICVi1ZlZQAhB2DWNebDreSFwHadh4AjQrDcoIFRNFPJttS%2BNsY76fMi5%2F5ONGis2AbZyydxEBWmcUIie%2F3t02wGWX%2FhOZ37RqmpXjuEjZQnBj3ij1bbnq6qmdzKdzwyNoqxWETEH5AdJ5Z1mwaySHF%2Bn5MOzOgL7GsghAlSmHOybsB2igGfTdAKfJIS2jSsuilRFmTc8MABm%2BmuzGKvDLKBy%2FEC0dn9zgPhWy%2BSTtEvaVzTU8gdCIanKEln7a2PUvnKHA1OLLIfto1UD6sodGYfKqYigPhaffdwzAqKscLE1sRSZoi13nUl5XE1QimJu2XRk8%2BkrPEQmGMZArQzeYihVb4Z0cP5XBMij2h2L5o%2FtpbzgG3eceWXYZoxjuwjyI92ecRQDaEQpctCUIQ1s9vvbfo6QqoM2kGmH0URobkj%2FLLQ6l7wIbfhBteilU9yC6m4JgoIL11IPXI7s4h6fJTlSohnjuFnrUwiEuxbA1M%2BxqVHW5hWqEtSgi4OxS4S2TWveNO8g4NY9S521Aa3gTc1HuRMA5Z2xsN4rJbRsPuTEZcrrwLhn%2FDc4Uo%2BfNfQvmJlWIT5rpeseuQuga2LQVAPjczSM0JwO1q%2FPEhilLlA8WTLdwsiaIxtEE%2FEivDZSA5mvnkdODuZLTD%2BsoUZewurEzyimxF%2FG9dDebVnyN46FYdYf1kbRRspwJssNm5uVYr%2BCrOn%2FzHu5kiZCWUOVv0gzJQwwkaOmwwY6mwG%2F5eQtgpcYfUfwSetwy42dVnCOaUjR%2BE8%2F3sfAuxTQMmQIgaug%2FVBBWY8lQL0thpJ311EWvaUrGt53Frg%2F1kfTAQDyhQQO1Lxsh3koe%2FbtLOkIC4QQUULLQ%2B81q7N73HqaWyBvzq6IbAQZyqNK3eu3p0JN9cXyPsn%2FaqUpFdLX%2F6vzyiW3Mko5gzSu17IXZacQsNsCf4DQXPh4ow%3D%3D&amp;Expires=1751749965#dynamic">Dynamic Attributes</a></li>
+        <li><a href="https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/48152090/1eb214bb-757c-40bc-a65d-298beb8778c0/emc2-complete-dictionary.html?AWSAccessKeyId=ASIA2F3EMEYE55J6PDOK&amp;Signature=KUAimjjRYVA7Dx3M87t6WGGghYA%3D&amp;x-amz-security-token=IQoJb3JpZ2luX2VjEEUaCXVzLWVhc3QtMSJGMEQCIEU6gpFGKV8IapJTVlx1wJBM555fqTHW%2BQodXUo%2BTDQzAiAm%2BLd0Mm2LE4P3H%2BWKzhVVRtNW67INsHFZRct4goPfbSrxBAhOEAEaDDY5OTc1MzMwOTcwNSIMDErl%2FiO9BlBvCb54Ks4EynCpgqMHY5BfEWc0NI2shcEU7dmPOLmWdfHGz6NWgETws34lmJgKDiyPICVi1ZlZQAhB2DWNebDreSFwHadh4AjQrDcoIFRNFPJttS%2BNsY76fMi5%2F5ONGis2AbZyydxEBWmcUIie%2F3t02wGWX%2FhOZ37RqmpXjuEjZQnBj3ij1bbnq6qmdzKdzwyNoqxWETEH5AdJ5Z1mwaySHF%2Bn5MOzOgL7GsghAlSmHOybsB2igGfTdAKfJIS2jSsuilRFmTc8MABm%2BmuzGKvDLKBy%2FEC0dn9zgPhWy%2BSTtEvaVzTU8gdCIanKEln7a2PUvnKHA1OLLIfto1UD6sodGYfKqYigPhaffdwzAqKscLE1sRSZoi13nUl5XE1QimJu2XRk8%2BkrPEQmGMZArQzeYihVb4Z0cP5XBMij2h2L5o%2FtpbzgG3eceWXYZoxjuwjyI92ecRQDaEQpctCUIQ1s9vvbfo6QqoM2kGmH0URobkj%2FLLQ6l7wIbfhBteilU9yC6m4JgoIL11IPXI7s4h6fJTlSohnjuFnrUwiEuxbA1M%2BxqVHW5hWqEtSgi4OxS4S2TWveNO8g4NY9S521Aa3gTc1HuRMA5Z2xsN4rJbRsPuTEZcrrwLhn%2FDc4Uo%2BfNfQvmJlWIT5rpeseuQuga2LQVAPjczSM0JwO1q%2FPEhilLlA8WTLdwsiaIxtEE%2FEivDZSA5mvnkdODuZLTD%2BsoUZewurEzyimxF%2FG9dDebVnyN46FYdYf1kbRRspwJssNm5uVYr%2BCrOn%2FzHu5kiZCWUOVv0gzJQwwkaOmwwY6mwG%2F5eQtgpcYfUfwSetwy42dVnCOaUjR%2BE8%2F3sfAuxTQMmQIgaug%2FVBBWY8lQL0thpJ311EWvaUrGt53Frg%2F1kfTAQDyhQQO1Lxsh3koe%2FbtLOkIC4QQUULLQ%2B81q7N73HqaWyBvzq6IbAQZyqNK3eu3p0JN9cXyPsn%2FaqUpFdLX%2F6vzyiW3Mko5gzSu17IXZacQsNsCf4DQXPh4ow%3D%3D&amp;Expires=1751749965#import">Import &amp; Automation</a></li>
+        <li><a href="https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/48152090/1eb214bb-757c-40bc-a65d-298beb8778c0/emc2-complete-dictionary.html?AWSAccessKeyId=ASIA2F3EMEYE55J6PDOK&amp;Signature=KUAimjjRYVA7Dx3M87t6WGGghYA%3D&amp;x-amz-security-token=IQoJb3JpZ2luX2VjEEUaCXVzLWVhc3QtMSJGMEQCIEU6gpFGKV8IapJTVlx1wJBM555fqTHW%2BQodXUo%2BTDQzAiAm%2BLd0Mm2LE4P3H%2BWKzhVVRtNW67INsHFZRct4goPfbSrxBAhOEAEaDDY5OTc1MzMwOTcwNSIMDErl%2FiO9BlBvCb54Ks4EynCpgqMHY5BfEWc0NI2shcEU7dmPOLmWdfHGz6NWgETws34lmJgKDiyPICVi1ZlZQAhB2DWNebDreSFwHadh4AjQrDcoIFRNFPJttS%2BNsY76fMi5%2F5ONGis2AbZyydxEBWmcUIie%2F3t02wGWX%2FhOZ37RqmpXjuEjZQnBj3ij1bbnq6qmdzKdzwyNoqxWETEH5AdJ5Z1mwaySHF%2Bn5MOzOgL7GsghAlSmHOybsB2igGfTdAKfJIS2jSsuilRFmTc8MABm%2BmuzGKvDLKBy%2FEC0dn9zgPhWy%2BSTtEvaVzTU8gdCIanKEln7a2PUvnKHA1OLLIfto1UD6sodGYfKqYigPhaffdwzAqKscLE1sRSZoi13nUl5XE1QimJu2XRk8%2BkrPEQmGMZArQzeYihVb4Z0cP5XBMij2h2L5o%2FtpbzgG3eceWXYZoxjuwjyI92ecRQDaEQpctCUIQ1s9vvbfo6QqoM2kGmH0URobkj%2FLLQ6l7wIbfhBteilU9yC6m4JgoIL11IPXI7s4h6fJTlSohnjuFnrUwiEuxbA1M%2BxqVHW5hWqEtSgi4OxS4S2TWveNO8g4NY9S521Aa3gTc1HuRMA5Z2xsN4rJbRsPuTEZcrrwLhn%2FDc4Uo%2BfNfQvmJlWIT5rpeseuQuga2LQVAPjczSM0JwO1q%2FPEhilLlA8WTLdwsiaIxtEE%2FEivDZSA5mvnkdODuZLTD%2BsoUZewurEzyimxF%2FG9dDebVnyN46FYdYf1kbRRspwJssNm5uVYr%2BCrOn%2FzHu5kiZCWUOVv0gzJQwwkaOmwwY6mwG%2F5eQtgpcYfUfwSetwy42dVnCOaUjR%2BE8%2F3sfAuxTQMmQIgaug%2FVBBWY8lQL0thpJ311EWvaUrGt53Frg%2F1kfTAQDyhQQO1Lxsh3koe%2FbtLOkIC4QQUULLQ%2B81q7N73HqaWyBvzq6IbAQZyqNK3eu3p0JN9cXyPsn%2FaqUpFdLX%2F6vzyiW3Mko5gzSu17IXZacQsNsCf4DQXPh4ow%3D%3D&amp;Expires=1751749965#consistency">Consistency &amp; Validation</a></li>
+        <li><a href="https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/48152090/1eb214bb-757c-40bc-a65d-298beb8778c0/emc2-complete-dictionary.html?AWSAccessKeyId=ASIA2F3EMEYE55J6PDOK&amp;Signature=KUAimjjRYVA7Dx3M87t6WGGghYA%3D&amp;x-amz-security-token=IQoJb3JpZ2luX2VjEEUaCXVzLWVhc3QtMSJGMEQCIEU6gpFGKV8IapJTVlx1wJBM555fqTHW%2BQodXUo%2BTDQzAiAm%2BLd0Mm2LE4P3H%2BWKzhVVRtNW67INsHFZRct4goPfbSrxBAhOEAEaDDY5OTc1MzMwOTcwNSIMDErl%2FiO9BlBvCb54Ks4EynCpgqMHY5BfEWc0NI2shcEU7dmPOLmWdfHGz6NWgETws34lmJgKDiyPICVi1ZlZQAhB2DWNebDreSFwHadh4AjQrDcoIFRNFPJttS%2BNsY76fMi5%2F5ONGis2AbZyydxEBWmcUIie%2F3t02wGWX%2FhOZ37RqmpXjuEjZQnBj3ij1bbnq6qmdzKdzwyNoqxWETEH5AdJ5Z1mwaySHF%2Bn5MOzOgL7GsghAlSmHOybsB2igGfTdAKfJIS2jSsuilRFmTc8MABm%2BmuzGKvDLKBy%2FEC0dn9zgPhWy%2BSTtEvaVzTU8gdCIanKEln7a2PUvnKHA1OLLIfto1UD6sodGYfKqYigPhaffdwzAqKscLE1sRSZoi13nUl5XE1QimJu2XRk8%2BkrPEQmGMZArQzeYihVb4Z0cP5XBMij2h2L5o%2FtpbzgG3eceWXYZoxjuwjyI92ecRQDaEQpctCUIQ1s9vvbfo6QqoM2kGmH0URobkj%2FLLQ6l7wIbfhBteilU9yC6m4JgoIL11IPXI7s4h6fJTlSohnjuFnrUwiEuxbA1M%2BxqVHW5hWqEtSgi4OxS4S2TWveNO8g4NY9S521Aa3gTc1HuRMA5Z2xsN4rJbRsPuTEZcrrwLhn%2FDc4Uo%2BfNfQvmJlWIT5rpeseuQuga2LQVAPjczSM0JwO1q%2FPEhilLlA8WTLdwsiaIxtEE%2FEivDZSA5mvnkdODuZLTD%2BsoUZewurEzyimxF%2FG9dDebVnyN46FYdYf1kbRRspwJssNm5uVYr%2BCrOn%2FzHu5kiZCWUOVv0gzJQwwkaOmwwY6mwG%2F5eQtgpcYfUfwSetwy42dVnCOaUjR%2BE8%2F3sfAuxTQMmQIgaug%2FVBBWY8lQL0thpJ311EWvaUrGt53Frg%2F1kfTAQDyhQQO1Lxsh3koe%2FbtLOkIC4QQUULLQ%2B81q7N73HqaWyBvzq6IbAQZyqNK3eu3p0JN9cXyPsn%2FaqUpFdLX%2F6vzyiW3Mko5gzSu17IXZacQsNsCf4DQXPh4ow%3D%3D&amp;Expires=1751749965#regulation">Regulation &amp; Compliance</a></li>
+        <li><a href="https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/48152090/1eb214bb-757c-40bc-a65d-298beb8778c0/emc2-complete-dictionary.html?AWSAccessKeyId=ASIA2F3EMEYE55J6PDOK&amp;Signature=KUAimjjRYVA7Dx3M87t6WGGghYA%3D&amp;x-amz-security-token=IQoJb3JpZ2luX2VjEEUaCXVzLWVhc3QtMSJGMEQCIEU6gpFGKV8IapJTVlx1wJBM555fqTHW%2BQodXUo%2BTDQzAiAm%2BLd0Mm2LE4P3H%2BWKzhVVRtNW67INsHFZRct4goPfbSrxBAhOEAEaDDY5OTc1MzMwOTcwNSIMDErl%2FiO9BlBvCb54Ks4EynCpgqMHY5BfEWc0NI2shcEU7dmPOLmWdfHGz6NWgETws34lmJgKDiyPICVi1ZlZQAhB2DWNebDreSFwHadh4AjQrDcoIFRNFPJttS%2BNsY76fMi5%2F5ONGis2AbZyydxEBWmcUIie%2F3t02wGWX%2FhOZ37RqmpXjuEjZQnBj3ij1bbnq6qmdzKdzwyNoqxWETEH5AdJ5Z1mwaySHF%2Bn5MOzOgL7GsghAlSmHOybsB2igGfTdAKfJIS2jSsuilRFmTc8MABm%2BmuzGKvDLKBy%2FEC0dn9zgPhWy%2BSTtEvaVzTU8gdCIanKEln7a2PUvnKHA1OLLIfto1UD6sodGYfKqYigPhaffdwzAqKscLE1sRSZoi13nUl5XE1QimJu2XRk8%2BkrPEQmGMZArQzeYihVb4Z0cP5XBMij2h2L5o%2FtpbzgG3eceWXYZoxjuwjyI92ecRQDaEQpctCUIQ1s9vvbfo6QqoM2kGmH0URobkj%2FLLQ6l7wIbfhBteilU9yC6m4JgoIL11IPXI7s4h6fJTlSohnjuFnrUwiEuxbA1M%2BxqVHW5hWqEtSgi4OxS4S2TWveNO8g4NY9S521Aa3gTc1HuRMA5Z2xsN4rJbRsPuTEZcrrwLhn%2FDc4Uo%2BfNfQvmJlWIT5rpeseuQuga2LQVAPjczSM0JwO1q%2FPEhilLlA8WTLdwsiaIxtEE%2FEivDZSA5mvnkdODuZLTD%2BsoUZewurEzyimxF%2FG9dDebVnyN46FYdYf1kbRRspwJssNm5uVYr%2BCrOn%2FzHu5kiZCWUOVv0gzJQwwkaOmwwY6mwG%2F5eQtgpcYfUfwSetwy42dVnCOaUjR%2BE8%2F3sfAuxTQMmQIgaug%2FVBBWY8lQL0thpJ311EWvaUrGt53Frg%2F1kfTAQDyhQQO1Lxsh3koe%2FbtLOkIC4QQUULLQ%2B81q7N73HqaWyBvzq6IbAQZyqNK3eu3p0JN9cXyPsn%2FaqUpFdLX%2F6vzyiW3Mko5gzSu17IXZacQsNsCf4DQXPh4ow%3D%3D&amp;Expires=1751749965#ai">AI &amp; Audit</a></li>
+        <li><a href="https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/48152090/1eb214bb-757c-40bc-a65d-298beb8778c0/emc2-complete-dictionary.html?AWSAccessKeyId=ASIA2F3EMEYE55J6PDOK&amp;Signature=KUAimjjRYVA7Dx3M87t6WGGghYA%3D&amp;x-amz-security-token=IQoJb3JpZ2luX2VjEEUaCXVzLWVhc3QtMSJGMEQCIEU6gpFGKV8IapJTVlx1wJBM555fqTHW%2BQodXUo%2BTDQzAiAm%2BLd0Mm2LE4P3H%2BWKzhVVRtNW67INsHFZRct4goPfbSrxBAhOEAEaDDY5OTc1MzMwOTcwNSIMDErl%2FiO9BlBvCb54Ks4EynCpgqMHY5BfEWc0NI2shcEU7dmPOLmWdfHGz6NWgETws34lmJgKDiyPICVi1ZlZQAhB2DWNebDreSFwHadh4AjQrDcoIFRNFPJttS%2BNsY76fMi5%2F5ONGis2AbZyydxEBWmcUIie%2F3t02wGWX%2FhOZ37RqmpXjuEjZQnBj3ij1bbnq6qmdzKdzwyNoqxWETEH5AdJ5Z1mwaySHF%2Bn5MOzOgL7GsghAlSmHOybsB2igGfTdAKfJIS2jSsuilRFmTc8MABm%2BmuzGKvDLKBy%2FEC0dn9zgPhWy%2BSTtEvaVzTU8gdCIanKEln7a2PUvnKHA1OLLIfto1UD6sodGYfKqYigPhaffdwzAqKscLE1sRSZoi13nUl5XE1QimJu2XRk8%2BkrPEQmGMZArQzeYihVb4Z0cP5XBMij2h2L5o%2FtpbzgG3eceWXYZoxjuwjyI92ecRQDaEQpctCUIQ1s9vvbfo6QqoM2kGmH0URobkj%2FLLQ6l7wIbfhBteilU9yC6m4JgoIL11IPXI7s4h6fJTlSohnjuFnrUwiEuxbA1M%2BxqVHW5hWqEtSgi4OxS4S2TWveNO8g4NY9S521Aa3gTc1HuRMA5Z2xsN4rJbRsPuTEZcrrwLhn%2FDc4Uo%2BfNfQvmJlWIT5rpeseuQuga2LQVAPjczSM0JwO1q%2FPEhilLlA8WTLdwsiaIxtEE%2FEivDZSA5mvnkdODuZLTD%2BsoUZewurEzyimxF%2FG9dDebVnyN46FYdYf1kbRRspwJssNm5uVYr%2BCrOn%2FzHu5kiZCWUOVv0gzJQwwkaOmwwY6mwG%2F5eQtgpcYfUfwSetwy42dVnCOaUjR%2BE8%2F3sfAuxTQMmQIgaug%2FVBBWY8lQL0thpJ311EWvaUrGt53Frg%2F1kfTAQDyhQQO1Lxsh3koe%2FbtLOkIC4QQUULLQ%2B81q7N73HqaWyBvzq6IbAQZyqNK3eu3p0JN9cXyPsn%2FaqUpFdLX%2F6vzyiW3Mko5gzSu17IXZacQsNsCf4DQXPh4ow%3D%3D&amp;Expires=1751749965#system">System Configuration &amp; Events</a></li>
+        <li><a href="https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/48152090/1eb214bb-757c-40bc-a65d-298beb8778c0/emc2-complete-dictionary.html?AWSAccessKeyId=ASIA2F3EMEYE55J6PDOK&amp;Signature=KUAimjjRYVA7Dx3M87t6WGGghYA%3D&amp;x-amz-security-token=IQoJb3JpZ2luX2VjEEUaCXVzLWVhc3QtMSJGMEQCIEU6gpFGKV8IapJTVlx1wJBM555fqTHW%2BQodXUo%2BTDQzAiAm%2BLd0Mm2LE4P3H%2BWKzhVVRtNW67INsHFZRct4goPfbSrxBAhOEAEaDDY5OTc1MzMwOTcwNSIMDErl%2FiO9BlBvCb54Ks4EynCpgqMHY5BfEWc0NI2shcEU7dmPOLmWdfHGz6NWgETws34lmJgKDiyPICVi1ZlZQAhB2DWNebDreSFwHadh4AjQrDcoIFRNFPJttS%2BNsY76fMi5%2F5ONGis2AbZyydxEBWmcUIie%2F3t02wGWX%2FhOZ37RqmpXjuEjZQnBj3ij1bbnq6qmdzKdzwyNoqxWETEH5AdJ5Z1mwaySHF%2Bn5MOzOgL7GsghAlSmHOybsB2igGfTdAKfJIS2jSsuilRFmTc8MABm%2BmuzGKvDLKBy%2FEC0dn9zgPhWy%2BSTtEvaVzTU8gdCIanKEln7a2PUvnKHA1OLLIfto1UD6sodGYfKqYigPhaffdwzAqKscLE1sRSZoi13nUl5XE1QimJu2XRk8%2BkrPEQmGMZArQzeYihVb4Z0cP5XBMij2h2L5o%2FtpbzgG3eceWXYZoxjuwjyI92ecRQDaEQpctCUIQ1s9vvbfo6QqoM2kGmH0URobkj%2FLLQ6l7wIbfhBteilU9yC6m4JgoIL11IPXI7s4h6fJTlSohnjuFnrUwiEuxbA1M%2BxqVHW5hWqEtSgi4OxS4S2TWveNO8g4NY9S521Aa3gTc1HuRMA5Z2xsN4rJbRsPuTEZcrrwLhn%2FDc4Uo%2BfNfQvmJlWIT5rpeseuQuga2LQVAPjczSM0JwO1q%2FPEhilLlA8WTLdwsiaIxtEE%2FEivDZSA5mvnkdODuZLTD%2BsoUZewurEzyimxF%2FG9dDebVnyN46FYdYf1kbRRspwJssNm5uVYr%2BCrOn%2FzHu5kiZCWUOVv0gzJQwwkaOmwwY6mwG%2F5eQtgpcYfUfwSetwy42dVnCOaUjR%2BE8%2F3sfAuxTQMmQIgaug%2FVBBWY8lQL0thpJ311EWvaUrGt53Frg%2F1kfTAQDyhQQO1Lxsh3koe%2FbtLOkIC4QQUULLQ%2B81q7N73HqaWyBvzq6IbAQZyqNK3eu3p0JN9cXyPsn%2FaqUpFdLX%2F6vzyiW3Mko5gzSu17IXZacQsNsCf4DQXPh4ow%3D%3D&amp;Expires=1751749965#views">Views &amp; Reports</a></li>
+    </ul>
+
+    <div class="section" id="core">
+        <h2>Core Reference Tables</h2>
+        
+        <h3>Lenders</h3>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Lender_ID</td><td>UUID PK</td><td>Unique lender identifier</td><td>Primary key</td></tr>
+            <tr><td>Name</td><td>TEXT NOT NULL</td><td>Lender name</td><td>Required</td></tr>
+            <tr><td>Website_URL</td><td>TEXT</td><td>Company website</td><td>Optional</td></tr>
+            <tr><td>Contact_Name</td><td>TEXT</td><td>Primary contact person</td><td>AE or BDO</td></tr>
+            <tr><td>Contact_Email</td><td>TEXT</td><td>Primary email</td><td>Business sensitive</td></tr>
+            <tr><td>Contact_Phone</td><td>TEXT</td><td>Primary phone</td><td>Business sensitive</td></tr>
+            <tr><td>Active</td><td>BOOLEAN</td><td>Soft delete flag</td><td>Default TRUE</td></tr>
+            <tr><td>Profile_Score</td><td>DECIMAL(5,2)</td><td>Data completeness score</td><td>0-100 scale</td></tr>
+            <tr><td>Created_At</td><td>TIMESTAMP</td><td>Record creation</td><td>Auto-set</td></tr>
+            <tr><td>Updated_At</td><td>TIMESTAMP</td><td>Last update</td><td>Auto-set</td></tr>
+            <tr><td>Created_By</td><td>UUID</td><td>User or AI that created</td><td>FK to user/AI</td></tr>
+            <tr><td>Notes</td><td>TEXT</td><td>Internal notes</td><td>Free text</td></tr>
+        </tbody></table>
+
+        <h3>Programs</h3>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Program_ID</td><td>UUID</td><td>Program identifier</td><td>Part of composite PK</td></tr>
+            <tr><td>Program_Version</td><td>INT</td><td>Version number</td><td>Part of composite PK</td></tr>
+            <tr><td>Lender_ID</td><td>UUID FK</td><td>Parent lender</td><td>References Lenders</td></tr>
+            <tr><td>Product_Type</td><td>TEXT NOT NULL</td><td>DSCR, Bridge, Construction, etc.</td><td>Controlled vocabulary</td></tr>
+            <tr><td>Name</td><td>TEXT NOT NULL</td><td>Program name</td><td>Human-friendly</td></tr>
+            <tr><td>Valid_From</td><td>DATE</td><td>Effective start date</td><td>For versioning</td></tr>
+            <tr><td>Valid_To</td><td>DATE</td><td>Effective end date</td><td>Default 9999-12-31</td></tr>
+            <tr><td>Active</td><td>BOOLEAN</td><td>Soft delete flag</td><td>Default TRUE</td></tr>
+            <tr><td>Created_By</td><td>UUID</td><td>Creator reference</td><td>User or AI</td></tr>
+            <tr><td>Created_At</td><td>TIMESTAMP</td><td>Creation timestamp</td><td>Auto-set</td></tr>
+        </tbody></table>
+
+        <h3>ProgramCriteria</h3>
+        <div class="critical">
+            <strong>Critical:</strong> This table includes soft/hard thresholds for intelligent matching
+        </div>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Criteria_ID</td><td>UUID PK</td><td>Unique criteria identifier</td><td>Primary key</td></tr>
+            <tr><td>Program_ID</td><td>UUID</td><td>Parent program</td><td>Part of FK</td></tr>
+            <tr><td>Program_Version</td><td>INT</td><td>Program version</td><td>Part of FK</td></tr>
+            <tr><td>Card_ID</td><td>UUID FK</td><td>Associated card template</td><td>References Cards</td></tr>
+            <tr><td>Name</td><td>TEXT NOT NULL</td><td>Criteria name</td><td>e.g., 'max_ltv'</td></tr>
+            <tr><td>Data_Type</td><td>TEXT NOT NULL</td><td>decimal, integer, enum, bool</td><td>For validation</td></tr>
+            <tr><td>Soft_Min_Value</td><td>DECIMAL</td><td>Marketing minimum</td><td>Soft boundary</td></tr>
+            <tr><td>Hard_Min_Value</td><td>DECIMAL</td><td>Absolute minimum</td><td>Hard boundary</td></tr>
+            <tr><td>Soft_Max_Value</td><td>DECIMAL</td><td>Marketing maximum</td><td>Soft boundary</td></tr>
+            <tr><td>Hard_Max_Value</td><td>DECIMAL</td><td>Absolute maximum</td><td>Hard boundary</td></tr>
+            <tr><td>Currency_Code</td><td>CHAR(3)</td><td>ISO currency code</td><td>Default USD</td></tr>
+            <tr><td>Required_Flag</td><td>BOOLEAN</td><td>Is this required?</td><td>For matching</td></tr>
+            <tr><td>Question_ID</td><td>UUID FK</td><td>Associated question</td><td>References Questions</td></tr>
+            <tr><td>Version</td><td>INT</td><td>Criteria version</td><td>For history</td></tr>
+            <tr><td>Valid_From</td><td>DATE</td><td>Effective start</td><td>Versioning</td></tr>
+            <tr><td>Valid_To</td><td>DATE</td><td>Effective end</td><td>Default 9999-12-31</td></tr>
+            <tr><td>Created_By</td><td>UUID</td><td>Creator reference</td><td>User or AI</td></tr>
+            <tr><td>Created_At</td><td>TIMESTAMP</td><td>Creation timestamp</td><td>Auto-set</td></tr>
+            <tr><td>Description</td><td>TEXT</td><td>Human description</td><td>For clarity</td></tr>
+        </tbody></table>
+    </div>
+
+    <div class="section" id="cards">
+        <h2>Cards &amp; Templates System</h2>
+        
+        <h3>Cards</h3>
+        <div class="note">
+            Cards are reusable templates that group related criteria. They are NOT criteria themselves.
+        </div>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Card_ID</td><td>UUID PK</td><td>Unique card identifier</td><td>Primary key</td></tr>
+            <tr><td>Name</td><td>TEXT NOT NULL</td><td>Card name</td><td>e.g., 'Bridge Loan Card'</td></tr>
+            <tr><td>Type</td><td>TEXT NOT NULL</td><td>Card type</td><td>Product, Property, State, Citizenship, Borrower, Metro</td></tr>
+            <tr><td>Version</td><td>INT</td><td>Card version</td><td>Default 1</td></tr>
+            <tr><td>Valid_From</td><td>DATE</td><td>Effective start</td><td>For versioning</td></tr>
+            <tr><td>Valid_To</td><td>DATE</td><td>Effective end</td><td>Default 9999-12-31</td></tr>
+            <tr><td>Created_By</td><td>UUID</td><td>Creator reference</td><td>User or AI</td></tr>
+            <tr><td>Created_At</td><td>TIMESTAMP</td><td>Creation timestamp</td><td>Auto-set</td></tr>
+            <tr><td>Description</td><td>TEXT</td><td>Card purpose</td><td>Human-readable</td></tr>
+            <tr><td>Notes</td><td>TEXT</td><td>Additional notes</td><td>Optional</td></tr>
+        </tbody></table>
+
+        <h3>Questions</h3>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Question_ID</td><td>UUID PK</td><td>Unique question identifier</td><td>Primary key</td></tr>
+            <tr><td>Base_Text</td><td>TEXT NOT NULL</td><td>Default question text</td><td>Required</td></tr>
+            <tr><td>Contextual_Text</td><td>JSONB</td><td>Override text by context</td><td>Dynamic phrasing</td></tr>
+            <tr><td>Required_Flag</td><td>BOOLEAN</td><td>Is answer required?</td><td>Default FALSE</td></tr>
+            <tr><td>Live_Trigger</td><td>BOOLEAN</td><td>Supports dynamic branching?</td><td>Show/hide logic</td></tr>
+            <tr><td>Display_Order</td><td>INT</td><td>Sort order</td><td>For UI display</td></tr>
+            <tr><td>Section_Title</td><td>TEXT</td><td>Group heading</td><td>For organization</td></tr>
+            <tr><td>Version</td><td>INT</td><td>Question version</td><td>Default 1</td></tr>
+            <tr><td>Created_By</td><td>UUID</td><td>Creator reference</td><td>User or AI</td></tr>
+            <tr><td>Created_At</td><td>TIMESTAMP</td><td>Creation timestamp</td><td>Auto-set</td></tr>
+            <tr><td>Notes</td><td>TEXT</td><td>Additional notes</td><td>Optional</td></tr>
+        </tbody></table>
+    </div>
+
+    <div class="section" id="geographic">
+        <h2>Geographic Coverage</h2>
+        
+        <h3>States</h3>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>State_Code</td><td>CHAR(2) PK</td><td>State abbreviation</td><td>e.g., 'TX', 'CA'</td></tr>
+            <tr><td>Name</td><td>TEXT NOT NULL</td><td>Full state name</td><td>e.g., 'Texas'</td></tr>
+        </tbody></table>
+
+        <h3>Metros</h3>
+        <div class="note">
+            Metros handle sub-state geographic restrictions (e.g., DFW, Bay Area)
+        </div>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Metro_ID</td><td>UUID PK</td><td>Unique metro identifier</td><td>Primary key</td></tr>
+            <tr><td>Name</td><td>TEXT NOT NULL</td><td>Metro name</td><td>e.g., 'DFW', 'Bay Area'</td></tr>
+            <tr><td>State_Code</td><td>CHAR(2) FK</td><td>Parent state</td><td>References States</td></tr>
+            <tr><td>Coverage_Notes</td><td>TEXT</td><td>Coverage details</td><td>Optional clarification</td></tr>
+        </tbody></table>
+
+        <h3>Coverage Tables</h3>
+        <p>Program-level coverage overrides lender-level coverage via the EffectiveCoverage view</p>
+        <ul>
+            <li><strong>LenderStates</strong> - Default state coverage for all lender programs</li>
+            <li><strong>LenderMetros</strong> - Default metro coverage for all lender programs</li>
+            <li><strong>ProgramStates</strong> - Program-specific state coverage (overrides lender)</li>
+            <li><strong>ProgramMetros</strong> - Program-specific metro coverage (overrides lender)</li>
+        </ul>
+    </div>
+
+    <div class="section" id="scenario">
+        <h2>Scenario Lifecycle</h2>
+        
+        <h3>Scenarios</h3>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Scenario_ID</td><td>UUID PK</td><td>Unique scenario identifier</td><td>Primary key</td></tr>
+            <tr><td>Status</td><td>TEXT</td><td>Current status</td><td>Draft, Matching, Shopped, Offers_In, Presented, Won, Lost, Abandoned</td></tr>
+            <tr><td>Created_By</td><td>UUID</td><td>Creator user</td><td>Broker reference</td></tr>
+            <tr><td>Created_At</td><td>TIMESTAMP</td><td>Creation time</td><td>Auto-set</td></tr>
+            <tr><td>Updated_At</td><td>TIMESTAMP</td><td>Last update</td><td>Auto-set</td></tr>
+            <tr><td>Row_Version</td><td>INT</td><td>Optimistic lock</td><td>Prevents conflicts</td></tr>
+            <tr><td>Confidence_Score</td><td>DECIMAL(5,2)</td><td>Match confidence %</td><td>Based on completeness</td></tr>
+            <tr><td>Notes</td><td>TEXT</td><td>Broker notes</td><td>Free text</td></tr>
+        </tbody></table>
+
+        <h3>ScenarioRound</h3>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Scenario_ID</td><td>UUID</td><td>Parent scenario</td><td>Part of composite PK</td></tr>
+            <tr><td>Round_ID</td><td>INT</td><td>Round number</td><td>Part of composite PK</td></tr>
+            <tr><td>Started_At</td><td>TIMESTAMP</td><td>Round start</td><td>When shopping began</td></tr>
+            <tr><td>Ended_At</td><td>TIMESTAMP</td><td>Round end</td><td>When offers closed</td></tr>
+            <tr><td>Created_By</td><td>UUID</td><td>Who started round</td><td>User reference</td></tr>
+        </tbody></table>
+
+        <h3>ScenarioCommunication</h3>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Comm_ID</td><td>UUID PK</td><td>Communication ID</td><td>Primary key</td></tr>
+            <tr><td>Scenario_ID</td><td>UUID FK</td><td>Parent scenario</td><td>References Scenarios</td></tr>
+            <tr><td>Round_ID</td><td>INT</td><td>Shopping round</td><td>Which round</td></tr>
+            <tr><td>Lender_ID</td><td>UUID FK</td><td>Target lender</td><td>References Lenders</td></tr>
+            <tr><td>Direction</td><td>TEXT NOT NULL</td><td>Message direction</td><td>OUTBOUND or INBOUND</td></tr>
+            <tr><td>Payload_Snapshot</td><td>JSONB</td><td>Full message content</td><td>Email, attachments</td></tr>
+            <tr><td>Sent_At</td><td>TIMESTAMP</td><td>Send/receive time</td><td>Auto-set</td></tr>
+            <tr><td>Created_By</td><td>UUID</td><td>Sender/receiver</td><td>User reference</td></tr>
+        </tbody></table>
+
+        <h3>Offers</h3>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Offer_ID</td><td>UUID PK</td><td>Unique offer ID</td><td>Primary key</td></tr>
+            <tr><td>Scenario_ID</td><td>UUID FK</td><td>Parent scenario</td><td>References Scenarios</td></tr>
+            <tr><td>Round_ID</td><td>INT</td><td>Shopping round</td><td>Which round</td></tr>
+            <tr><td>Lender_ID</td><td>UUID FK</td><td>Offering lender</td><td>References Lenders</td></tr>
+            <tr><td>Program_ID</td><td>UUID</td><td>Program used</td><td>Part of FK</td></tr>
+            <tr><td>Program_Version</td><td>INT</td><td>Program version</td><td>Part of FK</td></tr>
+            <tr><td>Rate</td><td>DECIMAL(5,3)</td><td>Interest rate</td><td>e.g., 6.750</td></tr>
+            <tr><td>Loan_Amount</td><td>DECIMAL(18,2)</td><td>Offered amount</td><td>In currency</td></tr>
+            <tr><td>Currency_Code</td><td>CHAR(3)</td><td>Currency</td><td>Default USD</td></tr>
+            <tr><td>LTV</td><td>DECIMAL(5,2)</td><td>Loan-to-value</td><td>Percentage</td></tr>
+            <tr><td>LTC</td><td>DECIMAL(5,2)</td><td>Loan-to-cost</td><td>For construction</td></tr>
+            <tr><td>Fees_JSON</td><td>JSONB</td><td>Fee breakdown</td><td>Origination, etc.</td></tr>
+            <tr><td>Terms_JSON</td><td>JSONB</td><td>Other terms</td><td>Flexible storage</td></tr>
+            <tr><td>Status</td><td>TEXT</td><td>Offer status</td><td>Indicative, Soft, Firm</td></tr>
+            <tr><td>Received_At</td><td>TIMESTAMP</td><td>When received</td><td>Auto-set</td></tr>
+            <tr><td>Created_By</td><td>UUID</td><td>Who entered</td><td>User reference</td></tr>
+        </tbody></table>
+    </div>
+
+    <div class="section" id="conditional">
+        <h2>Conditional Logic Engine</h2>
+        
+        <h3>Conditional_Rules</h3>
+        <div class="critical">
+            <strong>Critical:</strong> This is the heart of the dynamic question system
+        </div>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Rule_ID</td><td>UUID PK</td><td>Rule identifier</td><td>Primary key</td></tr>
+            <tr><td>Rule_Name</td><td>TEXT</td><td>Human name</td><td>For UI</td></tr>
+            <tr><td>Conditions</td><td>JSONB NOT NULL</td><td>IF conditions</td><td>[{"card": "Product", "criteria": "Type", "value": "Bridge"}]</td></tr>
+            <tr><td>Action</td><td>TEXT NOT NULL</td><td>Rule action</td><td>ADD or REMOVE</td></tr>
+            <tr><td>Target_Question_ID</td><td>UUID FK</td><td>Question affected</td><td>References Questions</td></tr>
+            <tr><td>Priority</td><td>INT</td><td>Rule priority</td><td>Higher wins conflicts</td></tr>
+            <tr><td>Conflict_Resolver</td><td>TEXT</td><td>Conflict strategy</td><td>Override, Ignore, Combine</td></tr>
+            <tr><td>Version</td><td>INT</td><td>Rule version</td><td>For history</td></tr>
+            <tr><td>Valid_From</td><td>DATE</td><td>Effective start</td><td>Versioning</td></tr>
+            <tr><td>Valid_To</td><td>DATE</td><td>Effective end</td><td>Default 9999-12-31</td></tr>
+            <tr><td>Active</td><td>BOOLEAN</td><td>Is rule active?</td><td>Default TRUE</td></tr>
+            <tr><td>Created_By</td><td>UUID</td><td>Creator</td><td>User or AI</td></tr>
+            <tr><td>Created_At</td><td>TIMESTAMP</td><td>Creation time</td><td>Auto-set</td></tr>
+            <tr><td>Explain_Text</td><td>TEXT</td><td>Human explanation</td><td>Why this rule exists</td></tr>
+        </tbody></table>
+
+        <h3>QuestionLogic</h3>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Logic_ID</td><td>UUID PK</td><td>Logic identifier</td><td>Primary key</td></tr>
+            <tr><td>Parent_Question_ID</td><td>UUID FK</td><td>Triggering question</td><td>References Questions</td></tr>
+            <tr><td>Trigger_Value</td><td>TEXT</td><td>Answer that triggers</td><td>e.g., 'Yes'</td></tr>
+            <tr><td>Child_Question_ID</td><td>UUID FK</td><td>Affected question</td><td>References Questions</td></tr>
+            <tr><td>Action</td><td>TEXT NOT NULL</td><td>What to do</td><td>SHOW or HIDE</td></tr>
+            <tr><td>Created_At</td><td>TIMESTAMP</td><td>Creation time</td><td>Auto-set</td></tr>
+        </tbody></table>
+    </div>
+
+    <div class="section" id="exception">
+        <h2>Exception Handling</h2>
+        
+        <h3>ExceptionDefinition</h3>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Exception_ID</td><td>UUID PK</td><td>Exception rule ID</td><td>Primary key</td></tr>
+            <tr><td>Program_ID</td><td>UUID</td><td>Program allowing exception</td><td>Part of FK</td></tr>
+            <tr><td>Program_Version</td><td>INT</td><td>Program version</td><td>Part of FK</td></tr>
+            <tr><td>Criteria_ID</td><td>UUID FK</td><td>Which criteria can bend</td><td>e.g., max_ltv</td></tr>
+            <tr><td>Allowed_Direction</td><td>TEXT</td><td>Exception direction</td><td>ABOVE, BELOW, EITHER</td></tr>
+            <tr><td>Max_Delta</td><td>DECIMAL</td><td>Maximum variance</td><td>e.g., +5% for LTV</td></tr>
+            <tr><td>Requires_Approval_Role</td><td>TEXT</td><td>Who must approve</td><td>CLO, Credit Committee</td></tr>
+            <tr><td>Created_At</td><td>TIMESTAMP</td><td>Creation time</td><td>Auto-set</td></tr>
+            <tr><td>Created_By</td><td>UUID</td><td>Creator</td><td>User or AI</td></tr>
+        </tbody></table>
+
+        <h3>ExceptionGrant</h3>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Grant_ID</td><td>UUID PK</td><td>Specific grant ID</td><td>Primary key</td></tr>
+            <tr><td>Scenario_ID</td><td>UUID FK</td><td>Related scenario</td><td>References Scenarios</td></tr>
+            <tr><td>Offer_ID</td><td>UUID FK</td><td>Related offer</td><td>References Offers</td></tr>
+            <tr><td>Exception_ID</td><td>UUID FK</td><td>Exception rule used</td><td>References ExceptionDefinition</td></tr>
+            <tr><td>Requested_By</td><td>UUID</td><td>Who requested</td><td>Broker/AE</td></tr>
+            <tr><td>Approved_By</td><td>UUID</td><td>Who approved</td><td>Lender rep</td></tr>
+            <tr><td>Approved_At</td><td>TIMESTAMP</td><td>Approval time</td><td>When granted</td></tr>
+            <tr><td>Granted_Value</td><td>DECIMAL</td><td>Actual value approved</td><td>e.g., 78% LTV</td></tr>
+            <tr><td>Status</td><td>TEXT</td><td>Grant status</td><td>PENDING, APPROVED, DENIED</td></tr>
+            <tr><td>Notes</td><td>TEXT</td><td>Approval notes</td><td>Justification</td></tr>
+            <tr><td>Created_At</td><td>TIMESTAMP</td><td>Request time</td><td>Auto-set</td></tr>
+        </tbody></table>
+    </div>
+
+    <div class="section" id="import">
+        <h2>Import &amp; Automation</h2>
+        
+        <h3>Import_Raw</h3>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Import_ID</td><td>UUID PK</td><td>Import batch ID</td><td>Primary key</td></tr>
+            <tr><td>File_Name</td><td>TEXT NOT NULL</td><td>Original filename</td><td>For reference</td></tr>
+            <tr><td>File_Type</td><td>TEXT</td><td>File extension</td><td>xlsx, csv, pdf</td></tr>
+            <tr><td>Uploaded_By</td><td>UUID</td><td>User who uploaded</td><td>User reference</td></tr>
+            <tr><td>Raw_Data</td><td>JSONB</td><td>Parsed file content</td><td>All rows as JSON</td></tr>
+            <tr><td>Mappings</td><td>JSONB</td><td>Column mappings</td><td>Their cols → our fields</td></tr>
+            <tr><td>Import_Status</td><td>TEXT</td><td>Current status</td><td>Pending, Validated, Committed</td></tr>
+            <tr><td>Imported_At</td><td>TIMESTAMP</td><td>Upload time</td><td>Auto-set</td></tr>
+        </tbody></table>
+
+        <h3>SourceFeed</h3>
+        <div class="note">
+            For future automated rate sheet ingestion from email/web
+        </div>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>SourceFeed_ID</td><td>UUID PK</td><td>Feed identifier</td><td>Primary key</td></tr>
+            <tr><td>Name</td><td>TEXT NOT NULL</td><td>Feed name</td><td>e.g., "Park Place Inbox"</td></tr>
+            <tr><td>Type</td><td>TEXT</td><td>Feed type</td><td>EMAIL, RSS, WEB_SCRAPER, API</td></tr>
+            <tr><td>Endpoint</td><td>TEXT</td><td>Source location</td><td>IMAP folder, URL, etc.</td></tr>
+            <tr><td>Authentication_JSON</td><td>JSONB</td><td>Credentials</td><td>Encrypted at rest</td></tr>
+            <tr><td>Active</td><td>BOOLEAN</td><td>Is feed active?</td><td>Default TRUE</td></tr>
+            <tr><td>Last_Pulled</td><td>TIMESTAMP</td><td>Last check time</td><td>For scheduling</td></tr>
+            <tr><td>Created_At</td><td>TIMESTAMP</td><td>Creation time</td><td>Auto-set</td></tr>
+        </tbody></table>
+
+        <h3>FeedEvent</h3>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Event_ID</td><td>UUID PK</td><td>Event identifier</td><td>Primary key</td></tr>
+            <tr><td>SourceFeed_ID</td><td>UUID FK</td><td>Parent feed</td><td>References SourceFeed</td></tr>
+            <tr><td>Pulled_At</td><td>TIMESTAMP</td><td>When retrieved</td><td>Auto-set</td></tr>
+            <tr><td>Raw_Text</td><td>TEXT</td><td>Full content</td><td>Email body, HTML</td></tr>
+            <tr><td>Parsed_JSON</td><td>JSONB</td><td>Extracted data</td><td>From parser/AI</td></tr>
+            <tr><td>Status</td><td>TEXT</td><td>Processing status</td><td>NEW, PARSED, QUEUED, IGNORED, ERROR</td></tr>
+            <tr><td>Parser_Notes</td><td>TEXT</td><td>Parser output</td><td>Errors or notes</td></tr>
+            <tr><td>Checksum</td><td>TEXT</td><td>Duplicate check</td><td>Hash of content</td></tr>
+        </tbody></table>
+
+        <h3>AutomatedChangeQueue</h3>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Queue_ID</td><td>UUID PK</td><td>Queue entry ID</td><td>Primary key</td></tr>
+            <tr><td>Program_ID</td><td>UUID</td><td>Target program</td><td>What to update</td></tr>
+            <tr><td>Program_Version</td><td>INT</td><td>Current version</td><td>Base for change</td></tr>
+            <tr><td>Field_Path</td><td>TEXT</td><td>Field to change</td><td>e.g., criteria.max_ltv</td></tr>
+            <tr><td>Old_Value</td><td>TEXT</td><td>Current value</td><td>For comparison</td></tr>
+            <tr><td>Proposed_Value</td><td>TEXT</td><td>New value</td><td>From parser</td></tr>
+            <tr><td>Confidence</td><td>DECIMAL(5,4)</td><td>Parser confidence</td><td>0-1 score</td></tr>
+            <tr><td>Needs_Review</td><td>BOOLEAN</td><td>Human review?</td><td>Default TRUE</td></tr>
+            <tr><td>Created_From_Event</td><td>UUID FK</td><td>Source event</td><td>References FeedEvent</td></tr>
+            <tr><td>Created_At</td><td>TIMESTAMP</td><td>Queue time</td><td>Auto-set</td></tr>
+            <tr><td>Reviewed_By</td><td>UUID</td><td>Reviewer</td><td>Who approved</td></tr>
+            <tr><td>Reviewed_At</td><td>TIMESTAMP</td><td>Review time</td><td>When reviewed</td></tr>
+            <tr><td>Committed</td><td>BOOLEAN</td><td>Applied?</td><td>Default FALSE</td></tr>
+            <tr><td>Notes</td><td>TEXT</td><td>Review notes</td><td>Optional</td></tr>
+        </tbody></table>
+    </div>
+
+    <div class="section" id="consistency">
+        <h2>Consistency &amp; Validation</h2>
+        
+        <h3>ConsistencyRule</h3>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Rule_ID</td><td>UUID PK</td><td>Rule identifier</td><td>Primary key</td></tr>
+            <tr><td>Entity_Type</td><td>TEXT NOT NULL</td><td>What to check</td><td>ProgramCriteria, PricingMatrix</td></tr>
+            <tr><td>Field_Path</td><td>TEXT</td><td>Field to validate</td><td>e.g., max_ltv</td></tr>
+            <tr><td>Rule_Logic</td><td>JSONB</td><td>Validation logic</td><td>{"type": "unique_per_program"}</td></tr>
+            <tr><td>Severity</td><td>TEXT</td><td>Issue severity</td><td>WARN or BLOCK</td></tr>
+            <tr><td>Description</td><td>TEXT</td><td>Rule purpose</td><td>Human explanation</td></tr>
+            <tr><td>Created_By</td><td>UUID</td><td>Creator</td><td>User or AI</td></tr>
+            <tr><td>Created_At</td><td>TIMESTAMP</td><td>Creation time</td><td>Auto-set</td></tr>
+        </tbody></table>
+
+        <h3>DataIssueLog</h3>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Issue_ID</td><td>UUID PK</td><td>Issue identifier</td><td>Primary key</td></tr>
+            <tr><td>Entity_Type</td><td>TEXT NOT NULL</td><td>Entity with issue</td><td>Table name</td></tr>
+            <tr><td>Entity_PK</td><td>TEXT NOT NULL</td><td>Entity key</td><td>Composite key as string</td></tr>
+            <tr><td>Rule_ID</td><td>UUID FK</td><td>Violated rule</td><td>References ConsistencyRule</td></tr>
+            <tr><td>Detected_At</td><td>TIMESTAMP</td><td>Detection time</td><td>Auto-set</td></tr>
+            <tr><td>Status</td><td>TEXT</td><td>Issue status</td><td>OPEN, ACK, RESOLVED, IGNORED</td></tr>
+            <tr><td>Resolved_At</td><td>TIMESTAMP</td><td>Resolution time</td><td>When fixed</td></tr>
+            <tr><td>Notes</td><td>TEXT</td><td>Resolution notes</td><td>How fixed</td></tr>
+            <tr><td>Detected_By</td><td>UUID</td><td>Detector</td><td>System or user</td></tr>
+        </tbody></table>
+    </div>
+
+    <div class="section" id="ai">
+        <h2>AI &amp; Audit</h2>
+        
+        <h3>AI_Action_Log</h3>
+        <div class="critical">
+            <strong>Critical:</strong> Every AI change must be logged here for explainability
+        </div>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Action_ID</td><td>UUID PK</td><td>Action identifier</td><td>Primary key</td></tr>
+            <tr><td>Scenario_ID</td><td>UUID FK</td><td>Related scenario</td><td>If applicable</td></tr>
+            <tr><td>AI_Model</td><td>TEXT</td><td>Model used</td><td>e.g., GPT-4, Claude</td></tr>
+            <tr><td>Action_Type</td><td>TEXT</td><td>Type of action</td><td>Add, Remove, Update</td></tr>
+            <tr><td>Entity</td><td>TEXT</td><td>What was changed</td><td>Card, Criteria, Rule, Question</td></tr>
+            <tr><td>Entity_ID</td><td>UUID</td><td>Entity affected</td><td>Specific record</td></tr>
+            <tr><td>Before_State</td><td>JSONB</td><td>State before</td><td>Full record snapshot</td></tr>
+            <tr><td>After_State</td><td>JSONB</td><td>State after</td><td>Full record snapshot</td></tr>
+            <tr><td>Justification</td><td>TEXT</td><td>AI reasoning</td><td>Why change was made</td></tr>
+            <tr><td>Created_By</td><td>UUID</td><td>Initiator</td><td>AI or User ID</td></tr>
+            <tr><td>Timestamp</td><td>TIMESTAMP</td><td>Action time</td><td>Auto-set</td></tr>
+        </tbody></table>
+
+        <h3>User_AI_Permissions</h3>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>User_ID</td><td>UUID PK</td><td>User identifier</td><td>Primary key</td></tr>
+            <tr><td>AI_Permission</td><td>TEXT</td><td>Permission level</td><td>Read-Only, Suggest, Autonomous</td></tr>
+            <tr><td>Notes</td><td>TEXT</td><td>Permission notes</td><td>Why set this way</td></tr>
+            <tr><td>Updated_At</td><td>TIMESTAMP</td><td>Last change</td><td>Auto-set</td></tr>
+        </tbody></table>
+    </div>
+
+    <div class="section" id="collateral">
+        <h2>Collateral &amp; Future-Proofing</h2>
+        
+        <h3>Collateral</h3>
+        <div class="note">
+            Supports fractional and tokenized assets for future blockchain integration
+        </div>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Collateral_ID</td><td>UUID PK</td><td>Collateral identifier</td><td>Primary key</td></tr>
+            <tr><td>Collateral_Type</td><td>TEXT</td><td>Asset type</td><td>Property, Token, Receivable, Equipment</td></tr>
+            <tr><td>Asset_URI</td><td>TEXT</td><td>Asset location</td><td>Deed, blockchain address, etc.</td></tr>
+            <tr><td>Fraction_Numerator</td><td>INT</td><td>Ownership numerator</td><td>Default 1</td></tr>
+            <tr><td>Fraction_Denominator</td><td>INT</td><td>Ownership denominator</td><td>Default 1</td></tr>
+            <tr><td>Appraised_Value</td><td>DECIMAL(18,2)</td><td>Asset value</td><td>In currency</td></tr>
+            <tr><td>Currency_Code</td><td>CHAR(3)</td><td>Value currency</td><td>Default USD</td></tr>
+            <tr><td>Created_At</td><td>TIMESTAMP</td><td>Creation time</td><td>Auto-set</td></tr>
+            <tr><td>Created_By</td><td>UUID</td><td>Creator</td><td>User reference</td></tr>
+        </tbody></table>
+
+        <h3>FactLedger</h3>
+        <div class="note">
+            Append-only streaming facts for IoT, real-time feeds, and ML models
+        </div>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Fact_ID</td><td>UUID PK</td><td>Fact identifier</td><td>Primary key</td></tr>
+            <tr><td>Entity_Type</td><td>TEXT NOT NULL</td><td>Entity type</td><td>Program, Lender, Collateral</td></tr>
+            <tr><td>Entity_ID</td><td>UUID NOT NULL</td><td>Entity reference</td><td>Specific record</td></tr>
+            <tr><td>Attribute</td><td>TEXT NOT NULL</td><td>What was observed</td><td>e.g., rent_roll.monthly</td></tr>
+            <tr><td>Value_JSON</td><td>JSONB</td><td>Observed value</td><td>Flexible storage</td></tr>
+            <tr><td>Observed_At</td><td>TIMESTAMP NOT NULL</td><td>Observation time</td><td>From source</td></tr>
+            <tr><td>Source</td><td>TEXT</td><td>Data source</td><td>IoT-Meter, BankFeed, Email</td></tr>
+            <tr><td>Confidence</td><td>DECIMAL(5,4)</td><td>Data confidence</td><td>0-1 ML score</td></tr>
+            <tr><td>Created_At</td><td>TIMESTAMP</td><td>Record time</td><td>Auto-set</td></tr>
+        </tbody></table>
+
+        <h3>AttributeDefinition</h3>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Attr_Def_ID</td><td>UUID PK</td><td>Definition ID</td><td>Primary key</td></tr>
+            <tr><td>Name</td><td>TEXT NOT NULL</td><td>Attribute name</td><td>e.g., hull_serial_number</td></tr>
+            <tr><td>Data_Type</td><td>TEXT NOT NULL</td><td>Expected type</td><td>decimal, integer, bool, enum, json</td></tr>
+            <tr><td>Json_Schema</td><td>JSONB</td><td>Validation schema</td><td>For complex types</td></tr>
+            <tr><td>Created_By</td><td>UUID</td><td>Creator</td><td>User or AI</td></tr>
+            <tr><td>Created_At</td><td>TIMESTAMP</td><td>Creation time</td><td>Auto-set</td></tr>
+        </tbody></table>
+    </div>
+
+    <div class="section" id="system">
+        <h2>System Configuration &amp; Events</h2>
+        
+        <h3>SystemConfiguration</h3>
+        <div class="note">
+            Master settings table for all system-wide flags and configuration values
+        </div>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Config_ID</td><td>UUID PK</td><td>Configuration entry ID</td><td>Primary key</td></tr>
+            <tr><td>Config_Key</td><td>TEXT UNIQUE</td><td>Setting name</td><td>e.g., matching_algorithm_version</td></tr>
+            <tr><td>Config_Value</td><td>JSONB</td><td>Setting value</td><td>Flexible storage</td></tr>
+            <tr><td>Config_Type</td><td>TEXT NOT NULL</td><td>Scope level</td><td>GLOBAL, TENANT, USER</td></tr>
+            <tr><td>Effective_Date</td><td>DATE</td><td>When active</td><td>For scheduled changes</td></tr>
+            <tr><td>Created_At</td><td>TIMESTAMP</td><td>Creation time</td><td>Auto-set</td></tr>
+            <tr><td>Created_By</td><td>UUID</td><td>Who created</td><td>User reference</td></tr>
+            <tr><td>Notes</td><td>TEXT</td><td>Documentation</td><td>Why this setting exists</td></tr>
+        </tbody></table>
+
+        <h3>SystemEvents</h3>
+        <div class="critical">
+            <strong>Critical:</strong> This is the event stream foundation - every significant action flows through here
+        </div>
+        <table>
+            <tbody><tr><th>Column</th><th>Type</th><th>Description</th><th>Notes</th></tr>
+            <tr><td>Event_ID</td><td>UUID PK</td><td>Event identifier</td><td>Primary key</td></tr>
+            <tr><td>Event_Type</td><td>TEXT NOT NULL</td><td>Type of event</td><td>SCENARIO_CREATED, OFFER_RECEIVED, etc.</td></tr>
+            <tr><td>Entity_Type</td><td>TEXT NOT NULL</td><td>What was affected</td><td>Scenario, Program, Lender, etc.</td></tr>
+            <tr><td>Entity_ID</td><td>UUID NOT NULL</td><td>Specific record</td><td>ID of affected entity</td></tr>
+            <tr><td>Event_Payload</td><td>JSONB</td><td>Event details</td><td>Full context and data</td></tr>
+            <tr><td>Event_Timestamp</td><td>TIMESTAMP</td><td>When it happened</td><td>Auto-set</td></tr>
+            <tr><td>Event_Source</td><td>TEXT NOT NULL</td><td>Origin of event</td><td>USER, AI, SYSTEM, INTEGRATION</td></tr>
+            <tr><td>Source_ID</td><td>UUID</td><td>Who/what triggered</td><td>User_ID, AI_ID, etc.</td></tr>
+            <tr><td>Event_Version</td><td>INT</td><td>Schema version</td><td>For event evolution</td></tr>
+        </tbody></table>
+    </div>
+
+    <div class="section" id="views">
+        <h2>Views &amp; Reports</h2>
+        
+        <h3>Key Views</h3>
+        <ul>
+            <li><strong>EffectiveCoverage</strong> - Resolves program vs lender coverage precedence</li>
+            <li><strong>vw_program_printable</strong> - Flattened view for Excel/PDF exports</li>
+            <li><strong>MissingCriteria</strong> - Shows data gaps for quality improvement</li>
+            <li><strong>PendingFeedChanges</strong> - Automated changes awaiting review</li>
+        </ul>
+
+        <h3>Supporting Tables</h3>
+        <ul>
+            <li><strong>Saved_Views</strong> - User-saved filter sets (e.g., "TX Bridge Lenders")</li>
+            <li><strong>DocTemplate</strong> - PDF/Excel templates for branded exports</li>
+            <li><strong>DataSensitivity</strong> - PII flagging for privacy compliance</li>
+            <li><strong>Presentation</strong> - Borrower term sheet generation tracking</li>
+            <li><strong>Scenario_Snapshot</strong> - Version freeze for historical accuracy</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Key Design Principles</h2>
+        <ol>
+            <li><strong>No Hard Deletes</strong> - Triggers prevent deletion; use Active flags</li>
+            <li><strong>Everything Versioned</strong> - Programs, Cards, Rules all have versions with Valid_From/To</li>
+            <li><strong>AI-Native</strong> - Every table tracks Created_By (User or AI) with full audit logs</li>
+            <li><strong>Soft vs Hard Boundaries</strong> - Criteria have both marketing and absolute limits</li>
+            <li><strong>Metro Granularity</strong> - Sub-state geographic restrictions fully supported</li>
+            <li><strong>Future-Proof</strong> - Tokenization, streaming facts, multi-currency ready</li>
+            <li><strong>Incomplete Scenarios OK</strong> - Weighted scoring, not binary matching</li>
+            <li><strong>Dynamic Questions</strong> - Conditional logic engine adds/removes questions contextually</li>
+        </ol>
+    </div>
+
+    <div class="critical">
+        <h2>Critical Implementation Notes</h2>
+        <ul>
+            <li>Programs use composite keys (Program_ID, Program_Version) - all FKs must respect this</li>
+            <li>Scenario_Snapshot freezes exact versions used - critical for compliance</li>
+            <li>EffectiveCoverage view must be used for all geographic matching - never query tables directly</li>
+            <li>All monetary fields include Currency_Code - even if USD-only initially</li>
+            <li>JSONB fields have GIN indexes for performance</li>
+            <li>Row_Version on Scenarios prevents concurrent edit conflicts</li>
+            <li>Hard delete triggers are mandatory in production</li>
+        </ul>
+    </div>
+
+</body></html>

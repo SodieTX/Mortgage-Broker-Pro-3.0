@@ -1,0 +1,857 @@
+-- ==============================
+--  E = mc² Lending Core Schema
+--  COMPLETE VERSION WITH EVERYTHING
+--  Generated from full conversation
+-- ==============================
+
+-- ---------- CORE REFERENCE ------------
+
+-- Master lender entity
+CREATE TABLE Lenders (
+  Lender_ID      UUID PRIMARY KEY,
+  Name           TEXT NOT NULL,
+  Website_URL    TEXT,
+  Contact_Name   TEXT,
+  Contact_Email  TEXT,
+  Contact_Phone  TEXT,
+  Active         BOOLEAN DEFAULT TRUE,
+  Profile_Score  DECIMAL(5,2),  -- Data completeness/robustness score
+  Created_At     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Updated_At     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Created_By     UUID,  -- User or AI that created
+  Notes          TEXT
+);
+
+-- Cards system - templates that group criteria
+CREATE TABLE Cards (
+  Card_ID        UUID PRIMARY KEY,
+  Name           TEXT NOT NULL,
+  Type           TEXT NOT NULL,  -- 'Product', 'Property', 'State', 'Citizenship', 'Borrower', 'Metro'
+  Version        INT DEFAULT 1,
+  Valid_From     DATE DEFAULT CURRENT_DATE,
+  Valid_To       DATE DEFAULT '9999-12-31',
+  Created_By     UUID,  -- User/AI reference
+  Created_At     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Description    TEXT,
+  Notes          TEXT
+);
+
+-- Programs - versioned lending products
+CREATE TABLE Programs (
+  Program_ID      UUID,
+  Program_Version INT DEFAULT 1,
+  Lender_ID       UUID REFERENCES Lenders(Lender_ID),
+  Product_Type    TEXT NOT NULL,  -- 'DSCR', 'Bridge', 'Construction', etc.
+  Name            TEXT NOT NULL,
+  Valid_From      DATE DEFAULT CURRENT_DATE,
+  Valid_To        DATE DEFAULT '9999-12-31',
+  Active          BOOLEAN DEFAULT TRUE,
+  Created_By      UUID,
+  Created_At      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (Program_ID, Program_Version)
+);
+
+-- Questions catalog
+CREATE TABLE Questions (
+  Question_ID      UUID PRIMARY KEY,
+  Base_Text        TEXT NOT NULL,
+  Contextual_Text  JSONB,  -- Override text by condition
+  Required_Flag    BOOLEAN DEFAULT FALSE,
+  Live_Trigger     BOOLEAN DEFAULT FALSE,  -- Supports dynamic branching
+  Display_Order    INT DEFAULT 0,
+  Section_Title    TEXT,
+  Version          INT DEFAULT 1,
+  Created_By       UUID,
+  Created_At       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Notes            TEXT
+);
+
+-- Program criteria with soft/hard thresholds
+CREATE TABLE ProgramCriteria (
+  Criteria_ID          UUID PRIMARY KEY,
+  Program_ID           UUID NOT NULL,
+  Program_Version      INT NOT NULL,
+  Card_ID              UUID REFERENCES Cards(Card_ID),
+  Name                 TEXT NOT NULL,
+  Data_Type            TEXT NOT NULL,  -- 'decimal', 'integer', 'enum', 'bool'
+  Soft_Min_Value       DECIMAL,
+  Hard_Min_Value       DECIMAL,
+  Soft_Max_Value       DECIMAL,
+  Hard_Max_Value       DECIMAL,
+  Currency_Code        CHAR(3) DEFAULT 'USD',
+  Required_Flag        BOOLEAN DEFAULT FALSE,
+  Question_ID          UUID REFERENCES Questions(Question_ID),
+  Version              INT DEFAULT 1,
+  Valid_From           DATE DEFAULT CURRENT_DATE,
+  Valid_To             DATE DEFAULT '9999-12-31',
+  Created_By           UUID,
+  Created_At           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Description          TEXT,
+  FOREIGN KEY (Program_ID, Program_Version) REFERENCES Programs(Program_ID, Program_Version)
+);
+
+-- ---------- GEOGRAPHIC COVERAGE ------------
+
+-- States reference
+CREATE TABLE States (
+  State_Code    CHAR(2) PRIMARY KEY,
+  Name          TEXT NOT NULL
+);
+
+-- Metros reference
+CREATE TABLE Metros (
+  Metro_ID        UUID PRIMARY KEY,
+  Name            TEXT NOT NULL,  -- e.g., "DFW", "Bay Area"
+  State_Code      CHAR(2) REFERENCES States(State_Code),
+  Coverage_Notes  TEXT
+);
+
+-- Lender-level coverage (can be overridden by program)
+CREATE TABLE LenderStates (
+  Lender_ID    UUID REFERENCES Lenders(Lender_ID),
+  State_Code   CHAR(2) REFERENCES States(State_Code),
+  PRIMARY KEY (Lender_ID, State_Code)
+);
+
+CREATE TABLE LenderMetros (
+  Lender_ID    UUID REFERENCES Lenders(Lender_ID),
+  Metro_ID     UUID REFERENCES Metros(Metro_ID),
+  PRIMARY KEY (Lender_ID, Metro_ID)
+);
+
+-- Program-level coverage (overrides lender coverage)
+CREATE TABLE ProgramStates (
+  Program_ID      UUID,
+  Program_Version INT,
+  State_Code      CHAR(2) REFERENCES States(State_Code),
+  PRIMARY KEY (Program_ID, Program_Version, State_Code),
+  FOREIGN KEY (Program_ID, Program_Version) REFERENCES Programs(Program_ID, Program_Version)
+);
+
+CREATE TABLE ProgramMetros (
+  Program_ID      UUID,
+  Program_Version INT,
+  Metro_ID        UUID REFERENCES Metros(Metro_ID),
+  PRIMARY KEY (Program_ID, Program_Version, Metro_ID),
+  FOREIGN KEY (Program_ID, Program_Version) REFERENCES Programs(Program_ID, Program_Version)
+);
+
+-- Effective coverage view
+CREATE VIEW EffectiveCoverage AS
+SELECT 
+  p.Program_ID,
+  p.Program_Version,
+  COALESCE(pm.Metro_ID, lm.Metro_ID) AS Metro_ID,
+  COALESCE(ps.State_Code, ls.State_Code) AS State_Code
+FROM Programs p
+LEFT JOIN ProgramMetros pm ON pm.Program_ID = p.Program_ID 
+  AND pm.Program_Version = p.Program_Version
+LEFT JOIN ProgramStates ps ON ps.Program_ID = p.Program_ID 
+  AND ps.Program_Version = p.Program_Version
+LEFT JOIN Lenders l ON l.Lender_ID = p.Lender_ID
+LEFT JOIN LenderMetros lm ON lm.Lender_ID = l.Lender_ID
+LEFT JOIN LenderStates ls ON ls.Lender_ID = l.Lender_ID;
+
+-- ---------- PRICING & INDICES ------------
+
+-- Rate indices
+CREATE TABLE RateIndex (
+  Index_ID     UUID PRIMARY KEY,
+  Name         TEXT NOT NULL,  -- "SOFR", "Prime", "CMT"
+  Index_Type   TEXT,  -- 'overnight', 'term', 'fixed', 'policy'
+  Currency     CHAR(3) DEFAULT 'USD'
+);
+
+-- FX rates for multi-currency
+CREATE TABLE FXRate (
+  From_Currency   CHAR(3),
+  To_Currency     CHAR(3),
+  Rate            DECIMAL(18,8),
+  Observed_At     TIMESTAMP,
+  PRIMARY KEY (From_Currency, To_Currency, Observed_At)
+);
+
+-- Pricing matrix
+CREATE TABLE PricingMatrix (
+  Matrix_ID         UUID PRIMARY KEY,
+  Program_ID        UUID,
+  Program_Version   INT,
+  Rate_Index_ID     UUID REFERENCES RateIndex(Index_ID),
+  Spread_bps        INT,  -- Basis points over index
+  Ltv_Band          TEXT,  -- e.g., "60-65", "65-70"
+  Dscr_Band         TEXT,  -- e.g., "1.25-1.35"
+  Effective_Date    DATE DEFAULT CURRENT_DATE,
+  Created_By        UUID,
+  Created_At        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (Program_ID, Program_Version) REFERENCES Programs(Program_ID, Program_Version)
+);
+
+-- ---------- SCENARIO LIFECYCLE ------------
+
+-- Core scenario record
+CREATE TABLE Scenarios (
+  Scenario_ID    UUID PRIMARY KEY,
+  Status         TEXT DEFAULT 'Draft',  -- 'Draft', 'Matching', 'Shopped', 'Offers_In', 'Presented', 'Won', 'Lost', 'Abandoned'
+  Created_By     UUID,
+  Created_At     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Updated_At     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Row_Version    INT DEFAULT 0,  -- Optimistic locking
+  Confidence_Score DECIMAL(5,2),  -- Match confidence based on completeness
+  Notes          TEXT
+);
+
+-- Scenario status log
+CREATE TABLE ScenarioStatusLog (
+  Log_ID         UUID PRIMARY KEY,
+  Scenario_ID    UUID REFERENCES Scenarios(Scenario_ID),
+  Old_Status     TEXT,
+  New_Status     TEXT,
+  Changed_By     UUID,
+  Changed_At     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Notes          TEXT
+);
+
+-- Shopping rounds
+CREATE TABLE ScenarioRound (
+  Scenario_ID    UUID REFERENCES Scenarios(Scenario_ID),
+  Round_ID       INT,
+  Started_At     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Ended_At       TIMESTAMP,
+  Created_By     UUID,
+  PRIMARY KEY (Scenario_ID, Round_ID)
+);
+
+-- Communications tracking
+CREATE TABLE ScenarioCommunication (
+  Comm_ID           UUID PRIMARY KEY,
+  Scenario_ID       UUID REFERENCES Scenarios(Scenario_ID),
+  Round_ID          INT,
+  Lender_ID         UUID REFERENCES Lenders(Lender_ID),
+  Direction         TEXT NOT NULL,  -- 'OUTBOUND', 'INBOUND'
+  Payload_Snapshot  JSONB,  -- Email content, attachments list, etc.
+  Sent_At           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Created_By        UUID,
+  FOREIGN KEY (Scenario_ID, Round_ID) REFERENCES ScenarioRound(Scenario_ID, Round_ID)
+);
+
+-- Scenario answers log
+CREATE TABLE ScenarioAnswerLog (
+  Log_ID         UUID PRIMARY KEY,
+  Scenario_ID    UUID REFERENCES Scenarios(Scenario_ID),
+  Question_ID    UUID REFERENCES Questions(Question_ID),
+  Old_Value      TEXT,
+  New_Value      TEXT,
+  Changed_By     UUID,
+  Changed_At     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Offers
+CREATE TABLE Offers (
+  Offer_ID          UUID PRIMARY KEY,
+  Scenario_ID       UUID REFERENCES Scenarios(Scenario_ID),
+  Round_ID          INT,
+  Lender_ID         UUID REFERENCES Lenders(Lender_ID),
+  Program_ID        UUID,
+  Program_Version   INT,
+  Rate              DECIMAL(5,3),
+  Loan_Amount       DECIMAL(18,2),
+  Currency_Code     CHAR(3) DEFAULT 'USD',
+  LTV               DECIMAL(5,2),
+  LTC               DECIMAL(5,2),
+  Fees_JSON         JSONB,  -- Origination, processing, etc.
+  Terms_JSON        JSONB,  -- Other terms
+  Status            TEXT DEFAULT 'Indicative',  -- 'Indicative', 'Soft', 'Firm'
+  Received_At       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Created_By        UUID,
+  FOREIGN KEY (Program_ID, Program_Version) REFERENCES Programs(Program_ID, Program_Version),
+  FOREIGN KEY (Scenario_ID, Round_ID) REFERENCES ScenarioRound(Scenario_ID, Round_ID)
+);
+
+-- Offer documents
+CREATE TABLE OfferDocuments (
+  Document_ID    UUID PRIMARY KEY,
+  Offer_ID       UUID REFERENCES Offers(Offer_ID),
+  File_ID        UUID,  -- Reference to file storage
+  Type           TEXT,  -- 'Term_Sheet', 'Email', 'LOI'
+  Uploaded_By    UUID,
+  Created_At     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ---------- BORROWER & PROPERTY ------------
+
+-- Borrower registry
+CREATE TABLE Borrower (
+  Borrower_ID     UUID PRIMARY KEY,
+  Display_Name    TEXT NOT NULL,
+  Entity_Type     TEXT,  -- 'Individual', 'LLC', 'Trust', 'Corporation'
+  Country_Code    CHAR(2) DEFAULT 'US',
+  Created_At      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Created_By      UUID
+);
+
+-- Link scenarios to multiple borrowers
+CREATE TABLE ScenarioBorrower (
+  Scenario_ID    UUID REFERENCES Scenarios(Scenario_ID),
+  Borrower_ID    UUID REFERENCES Borrower(Borrower_ID),
+  Role           TEXT DEFAULT 'Borrower',  -- 'Borrower', 'Co-Borrower', 'Guarantor', 'Investor'
+  PRIMARY KEY (Scenario_ID, Borrower_ID)
+);
+
+-- Property with geospatial
+CREATE TABLE Property (
+  Property_ID     UUID PRIMARY KEY,
+  Address_Line1   TEXT,
+  Address_Line2   TEXT,
+  City            TEXT,
+  State_Code      CHAR(2) REFERENCES States(State_Code),
+  Postal_Code     TEXT,
+  Country_Code    CHAR(2) DEFAULT 'US',
+  Geo_Point       GEOGRAPHY(Point, 4326),  -- PostGIS or nullable
+  Property_Type   TEXT,  -- 'SFR', 'MF', 'Office', 'Retail', etc.
+  Created_At      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Created_By      UUID
+);
+
+-- Link scenarios to properties
+CREATE TABLE ScenarioProperty (
+  Scenario_ID    UUID REFERENCES Scenarios(Scenario_ID),
+  Property_ID    UUID REFERENCES Property(Property_ID),
+  PRIMARY KEY (Scenario_ID, Property_ID)
+);
+
+-- ---------- COLLATERAL & TOKENIZATION ------------
+
+-- Collateral registry (supports fractional/tokenized)
+CREATE TABLE Collateral (
+  Collateral_ID         UUID PRIMARY KEY,
+  Collateral_Type       TEXT,  -- 'Property', 'Token', 'Receivable', 'Equipment'
+  Asset_URI             TEXT,  -- Deed record, blockchain address, etc.
+  Fraction_Numerator    INT DEFAULT 1,
+  Fraction_Denominator  INT DEFAULT 1,
+  Appraised_Value       DECIMAL(18,2),
+  Currency_Code         CHAR(3) DEFAULT 'USD',
+  Created_At            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Created_By            UUID
+);
+
+-- Link scenarios to collateral
+CREATE TABLE ScenarioCollateral (
+  Scenario_ID      UUID REFERENCES Scenarios(Scenario_ID),
+  Collateral_ID    UUID REFERENCES Collateral(Collateral_ID),
+  PRIMARY KEY (Scenario_ID, Collateral_ID)
+);
+
+-- ---------- CONDITIONAL LOGIC ENGINE ------------
+
+-- Conditional rules for dynamic questions
+CREATE TABLE Conditional_Rules (
+  Rule_ID             UUID PRIMARY KEY,
+  Rule_Name           TEXT,
+  Conditions          JSONB NOT NULL,  -- e.g., [{"card": "Product", "criteria": "Type", "value": "Bridge"}]
+  Action              TEXT NOT NULL,  -- 'ADD', 'REMOVE'
+  Target_Question_ID  UUID REFERENCES Questions(Question_ID),
+  Priority            INT DEFAULT 10,
+  Conflict_Resolver   TEXT DEFAULT 'Override',  -- 'Override', 'Ignore', 'Combine'
+  Version             INT DEFAULT 1,
+  Valid_From          DATE DEFAULT CURRENT_DATE,
+  Valid_To            DATE DEFAULT '9999-12-31',
+  Active              BOOLEAN DEFAULT TRUE,
+  Created_By          UUID,
+  Created_At          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Explain_Text        TEXT  -- Human-readable explanation
+);
+
+-- Dynamic question logic (show/hide based on answers)
+CREATE TABLE QuestionLogic (
+  Logic_ID             UUID PRIMARY KEY,
+  Parent_Question_ID   UUID REFERENCES Questions(Question_ID),
+  Trigger_Value        TEXT,  -- Answer that triggers action
+  Child_Question_ID    UUID REFERENCES Questions(Question_ID),
+  Action               TEXT NOT NULL,  -- 'SHOW', 'HIDE'
+  Created_At           TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ---------- EXCEPTION HANDLING ------------
+
+-- Exception definitions (what's allowed)
+CREATE TABLE ExceptionDefinition (
+  Exception_ID              UUID PRIMARY KEY,
+  Program_ID                UUID,
+  Program_Version           INT,
+  Criteria_ID               UUID REFERENCES ProgramCriteria(Criteria_ID),
+  Allowed_Direction         TEXT,  -- 'ABOVE', 'BELOW', 'EITHER'
+  Max_Delta                 DECIMAL,  -- e.g., +5% over stated LTV cap
+  Requires_Approval_Role    TEXT,  -- 'CLO', 'Credit Committee'
+  Created_At                TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Created_By                UUID,
+  FOREIGN KEY (Program_ID, Program_Version) REFERENCES Programs(Program_ID, Program_Version)
+);
+
+-- Exception grants (actual overrides)
+CREATE TABLE ExceptionGrant (
+  Grant_ID       UUID PRIMARY KEY,
+  Scenario_ID    UUID REFERENCES Scenarios(Scenario_ID),
+  Offer_ID       UUID REFERENCES Offers(Offer_ID),
+  Exception_ID   UUID REFERENCES ExceptionDefinition(Exception_ID),
+  Requested_By   UUID,
+  Approved_By    UUID,
+  Approved_At    TIMESTAMP,
+  Granted_Value  DECIMAL,  -- Actual LTV or FICO approved
+  Status         TEXT DEFAULT 'PENDING',  -- 'PENDING', 'APPROVED', 'DENIED'
+  Notes          TEXT,
+  Created_At     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ---------- SCENARIO SNAPSHOTS ------------
+
+-- Snapshot of all versions used in a scenario
+CREATE TABLE Scenario_Snapshot (
+  Scenario_ID      UUID PRIMARY KEY REFERENCES Scenarios(Scenario_ID),
+  Created_At       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Card_Versions    JSONB,  -- {"card_id": "version"}
+  Rule_Versions    JSONB,  -- {"rule_id": "version"}
+  Program_Versions JSONB,  -- {"program_id": "version"}
+  Override_Log     JSONB,  -- Manual overrides
+  Match_Trace      JSONB   -- Why lenders matched/didn't match
+);
+
+-- ---------- PRESENTATION & TEMPLATES ------------
+
+-- Document templates
+CREATE TABLE DocTemplate (
+  Template_ID    UUID PRIMARY KEY,
+  Name           TEXT NOT NULL,
+  Type           TEXT,  -- 'APPLICATION', 'OFFER_PRESENTATION', 'EXPORT'
+  File_URI       TEXT,
+  Created_By     UUID,
+  Created_At     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Borrower presentations
+CREATE TABLE Presentation (
+  Presentation_ID          UUID PRIMARY KEY,
+  Scenario_ID              UUID REFERENCES Scenarios(Scenario_ID),
+  Generated_At             TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Generated_By             UUID,
+  PresentationTemplate_ID  UUID REFERENCES DocTemplate(Template_ID),
+  Accepted_Offer_ID        UUID REFERENCES Offers(Offer_ID),
+  Borrower_Decision        TEXT,  -- 'Accepted', 'Declined', 'Questions'
+  Decision_At              TIMESTAMP,
+  Decision_Notes           TEXT,
+  File_URI                 TEXT  -- Generated PDF/Excel location
+);
+
+-- ---------- DYNAMIC ATTRIBUTES ------------
+
+-- Registry for custom fields
+CREATE TABLE AttributeDefinition (
+  Attr_Def_ID    UUID PRIMARY KEY,
+  Name           TEXT NOT NULL,
+  Data_Type      TEXT NOT NULL,  -- 'decimal', 'integer', 'bool', 'enum', 'json'
+  Json_Schema    JSONB,  -- Validation schema
+  Created_By     UUID,
+  Created_At     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ---------- FACT LEDGER (STREAMING) ------------
+
+-- Append-only fact storage
+CREATE TABLE FactLedger (
+  Fact_ID       UUID PRIMARY KEY,
+  Entity_Type   TEXT NOT NULL,  -- 'Program', 'Lender', 'Collateral', etc.
+  Entity_ID     UUID NOT NULL,
+  Attribute     TEXT NOT NULL,  -- e.g., "rent_roll.monthly_gross"
+  Value_JSON    JSONB,
+  Observed_At   TIMESTAMP NOT NULL,
+  Source        TEXT,  -- "IoT-Meter-A12", "BankFeed", "Email"
+  Confidence    DECIMAL(5,4),  -- 0-1 ML confidence
+  Created_At    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ---------- IMPORT & AUTOMATION ------------
+
+-- Import raw files
+CREATE TABLE Import_Raw (
+  Import_ID       UUID PRIMARY KEY,
+  File_Name       TEXT NOT NULL,
+  File_Type       TEXT,  -- 'xlsx', 'csv', 'pdf'
+  Uploaded_By     UUID,
+  Raw_Data        JSONB,  -- Parsed rows
+  Mappings        JSONB,  -- Column mappings
+  Import_Status   TEXT DEFAULT 'Pending',  -- 'Pending', 'Validated', 'Committed'
+  Imported_At     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Automated feed sources
+CREATE TABLE SourceFeed (
+  SourceFeed_ID         UUID PRIMARY KEY,
+  Name                  TEXT NOT NULL,
+  Type                  TEXT,  -- 'EMAIL', 'RSS', 'WEB_SCRAPER', 'API'
+  Endpoint              TEXT,  -- IMAP folder, URL, etc.
+  Authentication_JSON   JSONB,  -- Encrypted credentials
+  Active                BOOLEAN DEFAULT TRUE,
+  Last_Pulled           TIMESTAMP,
+  Created_At            TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Feed events
+CREATE TABLE FeedEvent (
+  Event_ID         UUID PRIMARY KEY,
+  SourceFeed_ID    UUID REFERENCES SourceFeed(SourceFeed_ID),
+  Pulled_At        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Raw_Text         TEXT,  -- Full email/HTML
+  Parsed_JSON      JSONB,  -- Extracted data
+  Status           TEXT DEFAULT 'NEW',  -- 'NEW', 'PARSED', 'QUEUED', 'IGNORED', 'ERROR'
+  Parser_Notes     TEXT,
+  Checksum         TEXT  -- Prevent duplicates
+);
+
+-- Automated change queue
+CREATE TABLE AutomatedChangeQueue (
+  Queue_ID              UUID PRIMARY KEY,
+  Program_ID            UUID,
+  Program_Version       INT,
+  Field_Path            TEXT,  -- e.g., 'criteria.max_ltv'
+  Old_Value             TEXT,
+  Proposed_Value        TEXT,
+  Confidence            DECIMAL(5,4),
+  Needs_Review          BOOLEAN DEFAULT TRUE,
+  Created_From_Event    UUID REFERENCES FeedEvent(Event_ID),
+  Created_At            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Reviewed_By           UUID,
+  Reviewed_At           TIMESTAMP,
+  Committed             BOOLEAN DEFAULT FALSE,
+  Notes                 TEXT
+);
+
+-- ---------- SAVED VIEWS & FILTERS ------------
+
+CREATE TABLE Saved_Views (
+  View_ID            UUID PRIMARY KEY,
+  User_ID            UUID,
+  Name               TEXT NOT NULL,
+  Filter_Definition  JSONB,  -- Query parameters
+  Created_At         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Last_Used          TIMESTAMP
+);
+
+-- ---------- CONSISTENCY & VALIDATION ------------
+
+-- Consistency rules
+CREATE TABLE ConsistencyRule (
+  Rule_ID       UUID PRIMARY KEY,
+  Entity_Type   TEXT NOT NULL,  -- 'ProgramCriteria', 'PricingMatrix'
+  Field_Path    TEXT,  -- e.g., 'max_ltv'
+  Rule_Logic    JSONB,  -- {"type": "unique_per_program"}
+  Severity      TEXT DEFAULT 'WARN',  -- 'WARN', 'BLOCK'
+  Description   TEXT,
+  Created_By    UUID,
+  Created_At    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Data issues log
+CREATE TABLE DataIssueLog (
+  Issue_ID       UUID PRIMARY KEY,
+  Entity_Type    TEXT NOT NULL,
+  Entity_PK      TEXT NOT NULL,  -- Composite key as string
+  Rule_ID        UUID REFERENCES ConsistencyRule(Rule_ID),
+  Detected_At    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Status         TEXT DEFAULT 'OPEN',  -- 'OPEN', 'ACK', 'RESOLVED', 'IGNORED'
+  Resolved_At    TIMESTAMP,
+  Notes          TEXT,
+  Detected_By    UUID
+);
+
+-- ---------- REGULATION & COMPLIANCE ------------
+
+-- Regulations
+CREATE TABLE Regulation (
+  Reg_ID        UUID PRIMARY KEY,
+  Name          TEXT NOT NULL,
+  Region_Code   TEXT,  -- ISO state, metro, or "EU"
+  Topic         TEXT,  -- 'ESG', 'Privacy', 'AML', 'Green-Building'
+  Start_Date    DATE,
+  End_Date      DATE,
+  Created_At    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Regulation rules
+CREATE TABLE RegulationRule (
+  Rule_ID      UUID PRIMARY KEY,
+  Reg_ID       UUID REFERENCES Regulation(Reg_ID),
+  Rule_Text    TEXT,  -- Human description
+  JSON_Logic   JSONB  -- Machine-readable conditions
+);
+
+-- ---------- AI & AUDIT ------------
+
+-- AI action log
+CREATE TABLE AI_Action_Log (
+  Action_ID      UUID PRIMARY KEY,
+  Scenario_ID    UUID REFERENCES Scenarios(Scenario_ID),
+  AI_Model       TEXT,
+  Action_Type    TEXT,  -- 'Add', 'Remove', 'Update'
+  Entity         TEXT,  -- 'Card', 'Criteria', 'Rule', 'Question'
+  Entity_ID      UUID,
+  Before_State   JSONB,
+  After_State    JSONB,
+  Justification  TEXT,
+  Created_By     UUID,  -- AI or User ID
+  Timestamp      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- User AI permissions
+CREATE TABLE User_AI_Permissions (
+  User_ID         UUID PRIMARY KEY,
+  AI_Permission   TEXT DEFAULT 'Read-Only',  -- 'Read-Only', 'Suggest', 'Autonomous'
+  Notes           TEXT,
+  Updated_At      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ---------- DATA SENSITIVITY ------------
+
+-- Data classification
+CREATE TABLE DataSensitivity (
+  Table_Name         TEXT,
+  Column_Name        TEXT,
+  Sensitivity_Level  TEXT NOT NULL,  -- 'PUBLIC', 'BUSINESS', 'PII', 'REGULATED'
+  PRIMARY KEY (Table_Name, Column_Name)
+);
+
+-- ---------- SYSTEM CONFIGURATION ------------
+
+-- Master configuration table for system-wide settings
+CREATE TABLE SystemConfiguration (
+  Config_ID       UUID PRIMARY KEY,
+  Config_Key      TEXT UNIQUE NOT NULL,
+  Config_Value    JSONB,
+  Config_Type     TEXT NOT NULL,  -- 'GLOBAL', 'TENANT', 'USER'
+  Effective_Date  DATE DEFAULT CURRENT_DATE,
+  Created_At      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Created_By      UUID,
+  Notes           TEXT
+);
+
+-- ---------- SYSTEM EVENTS ------------
+
+-- Event stream foundation for audit, integration, and replay
+CREATE TABLE SystemEvents (
+  Event_ID        UUID PRIMARY KEY,
+  Event_Type      TEXT NOT NULL,  -- 'SCENARIO_CREATED', 'OFFER_RECEIVED', 'PROGRAM_UPDATED', etc.
+  Entity_Type     TEXT NOT NULL,  -- 'Scenario', 'Program', 'Lender', etc.
+  Entity_ID       UUID NOT NULL,
+  Event_Payload   JSONB,  -- Full event details
+  Event_Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  Event_Source    TEXT NOT NULL,  -- 'USER', 'AI', 'SYSTEM', 'INTEGRATION'
+  Source_ID       UUID,  -- User_ID or AI_ID or Integration_ID
+  Event_Version   INT DEFAULT 1  -- For event schema evolution
+);
+
+-- Index for event queries
+CREATE INDEX idx_events_entity ON SystemEvents(Entity_Type, Entity_ID);
+CREATE INDEX idx_events_timestamp ON SystemEvents(Event_Timestamp);
+CREATE INDEX idx_events_type ON SystemEvents(Event_Type);
+
+-- ---------- UTILITY VIEWS ------------
+
+-- Missing criteria for data quality
+CREATE VIEW MissingCriteria AS
+SELECT 
+  p.Program_ID,
+  c.Criteria_ID,
+  q.Question_ID,
+  q.Base_Text
+FROM ProgramCriteria c
+JOIN Programs p ON p.Program_ID = c.Program_ID
+JOIN Questions q ON q.Question_ID = c.Question_ID
+LEFT JOIN FactLedger f ON f.Entity_Type = 'ProgramCriteria'
+  AND f.Entity_ID = c.Criteria_ID
+  AND f.Attribute = 'value'
+WHERE f.Fact_ID IS NULL;
+
+-- Pending feed changes
+CREATE VIEW PendingFeedChanges AS
+SELECT 
+  q.Queue_ID,
+  sf.Name AS Feed,
+  q.Program_ID,
+  q.Field_Path,
+  q.Old_Value,
+  q.Proposed_Value,
+  q.Confidence,
+  q.Needs_Review,
+  q.Created_At
+FROM AutomatedChangeQueue q
+JOIN FeedEvent fe ON fe.Event_ID = q.Created_From_Event
+JOIN SourceFeed sf ON sf.SourceFeed_ID = fe.SourceFeed_ID
+WHERE q.Committed = FALSE;
+
+-- Program printable view
+CREATE VIEW vw_program_printable AS
+SELECT 
+  l.Name AS Lender,
+  p.Program_ID,
+  p.Program_Version,
+  p.Product_Type,
+  string_agg(DISTINCT ps.State_Code, ', ') AS States,
+  MAX(CASE WHEN pc.Name = 'max_ltv' THEN pc.Hard_Max_Value END) AS Max_LTV,
+  MAX(CASE WHEN pc.Name = 'min_fico' THEN pc.Hard_Min_Value END) AS Min_FICO,
+  MAX(CASE WHEN pc.Name = 'loan_amount' THEN pc.Hard_Max_Value END) AS Max_Loan,
+  p.Valid_From, 
+  p.Valid_To
+FROM Programs p
+JOIN Lenders l ON l.Lender_ID = p.Lender_ID
+LEFT JOIN ProgramStates ps ON ps.Program_ID = p.Program_ID 
+  AND ps.Program_Version = p.Program_Version
+LEFT JOIN ProgramCriteria pc ON pc.Program_ID = p.Program_ID 
+  AND pc.Program_Version = p.Program_Version
+GROUP BY l.Name, p.Program_ID, p.Program_Version, p.Product_Type, 
+  p.Valid_From, p.Valid_To;
+
+-- ---------- INDEXES FOR PERFORMANCE ------------
+
+-- Hot path indexes
+CREATE INDEX idx_program_states_lookup ON ProgramStates(State_Code, Product_Type);
+CREATE INDEX idx_program_version ON Programs(Program_ID, Program_Version);
+CREATE INDEX idx_scenario_status ON Scenarios(Status);
+CREATE INDEX idx_offers_scenario ON Offers(Scenario_ID, Round_ID);
+CREATE INDEX idx_factledger_entity ON FactLedger(Entity_Type, Entity_ID);
+CREATE INDEX idx_criteria_program ON ProgramCriteria(Program_ID, Program_Version);
+
+-- GIN indexes for JSONB
+CREATE INDEX idx_criteria_json ON ProgramCriteria USING gin(Currency_Code);
+CREATE INDEX idx_conditions_json ON Conditional_Rules USING gin(Conditions);
+CREATE INDEX idx_snapshot_json ON Scenario_Snapshot USING gin(Card_Versions);
+
+-- ---------- HARD DELETE PROTECTION ------------
+
+CREATE OR REPLACE FUNCTION forbid_delete()
+RETURNS trigger AS $$
+BEGIN
+  RAISE EXCEPTION 
+    'Hard deletes are disabled on %; set Active = FALSE or create a new version instead.',
+    TG_TABLE_NAME;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Apply to all critical tables
+DO $$
+DECLARE
+  tbl TEXT;
+BEGIN
+  FOREACH tbl IN ARRAY ARRAY[
+    'Lenders',
+    'Programs',
+    'ProgramCriteria',
+    'ProgramStates',
+    'ProgramMetros',
+    'PricingMatrix',
+    'Scenarios',
+    'ScenarioRound',
+    'Offers',
+    'Presentation',
+    'Borrower',
+    'Property',
+    'Collateral',
+    'FactLedger',
+    'ExceptionDefinition',
+    'ExceptionGrant',
+    'Cards',
+    'Questions',
+    'Conditional_Rules',
+    'AI_Action_Log',
+    'ConsistencyRule'
+  ]
+  LOOP
+    EXECUTE format(
+      'CREATE TRIGGER no_delete_%s
+         BEFORE DELETE ON %I
+         FOR EACH ROW EXECUTE FUNCTION forbid_delete();',
+      tbl, tbl
+    );
+  END LOOP;
+END;
+$$;
+
+-- ---------- INITIAL SEED DATA ------------
+
+-- Insert states (abbreviated for example)
+INSERT INTO States (State_Code, Name) VALUES
+('AL', 'Alabama'), ('AK', 'Alaska'), ('AZ', 'Arizona'), ('AR', 'Arkansas'),
+('CA', 'California'), ('CO', 'Colorado'), ('CT', 'Connecticut'), ('DE', 'Delaware'),
+('DC', 'District of Columbia'), ('FL', 'Florida'), ('GA', 'Georgia'), ('HI', 'Hawaii'),
+('ID', 'Idaho'), ('IL', 'Illinois'), ('IN', 'Indiana'), ('IA', 'Iowa'),
+('KS', 'Kansas'), ('KY', 'Kentucky'), ('LA', 'Louisiana'), ('ME', 'Maine'),
+('MD', 'Maryland'), ('MA', 'Massachusetts'), ('MI', 'Michigan'), ('MN', 'Minnesota'),
+('MS', 'Mississippi'), ('MO', 'Missouri'), ('MT', 'Montana'), ('NE', 'Nebraska'),
+('NV', 'Nevada'), ('NH', 'New Hampshire'), ('NJ', 'New Jersey'), ('NM', 'New Mexico'),
+('NY', 'New York'), ('NC', 'North Carolina'), ('ND', 'North Dakota'), ('OH', 'Ohio'),
+('OK', 'Oklahoma'), ('OR', 'Oregon'), ('PA', 'Pennsylvania'), ('RI', 'Rhode Island'),
+('SC', 'South Carolina'), ('SD', 'South Dakota'), ('TN', 'Tennessee'), ('TX', 'Texas'),
+('UT', 'Utah'), ('VT', 'Vermont'), ('VA', 'Virginia'), ('WA', 'Washington'),
+('WV', 'West Virginia'), ('WI', 'Wisconsin'), ('WY', 'Wyoming');
+
+-- Sample metros
+INSERT INTO Metros (Metro_ID, Name, State_Code) VALUES
+('550e8400-e29b-41d4-a716-446655440001', 'DFW', 'TX'),
+('550e8400-e29b-41d4-a716-446655440002', 'Bay Area', 'CA'),
+('550e8400-e29b-41d4-a716-446655440003', 'NYC Metro', 'NY'),
+('550e8400-e29b-41d4-a716-446655440004', 'Miami-Dade', 'FL'),
+('550e8400-e29b-41d4-a716-446655440005', 'Chicago Metro', 'IL');
+
+-- Sample rate indices
+INSERT INTO RateIndex (Index_ID, Name, Index_Type, Currency) VALUES
+('650e8400-e29b-41d4-a716-446655440001', 'SOFR', 'overnight', 'USD'),
+('650e8400-e29b-41d4-a716-446655440002', 'Prime', 'policy', 'USD'),
+('650e8400-e29b-41d4-a716-446655440003', '1-Month CMT', 'term', 'USD');
+
+-- Sample data sensitivity mappings
+INSERT INTO DataSensitivity (Table_Name, Column_Name, Sensitivity_Level) VALUES
+('Borrower', 'Display_Name', 'PII'),
+('Borrower', 'Entity_Type', 'BUSINESS'),
+('Lenders', 'Contact_Email', 'BUSINESS'),
+('Lenders', 'Contact_Phone', 'BUSINESS'),
+('Property', 'Address_Line1', 'PII'),
+('Property', 'Address_Line2', 'PII'),
+('AI_Action_Log', 'Justification', 'BUSINESS');
+
+-- Sample system configuration
+INSERT INTO SystemConfiguration (Config_ID, Config_Key, Config_Value, Config_Type) VALUES
+('750e8400-e29b-41d4-a716-446655440001', 'matching_algorithm_version', '"2.0"', 'GLOBAL'),
+('750e8400-e29b-41d4-a716-446655440002', 'require_exception_approval', 'true', 'GLOBAL'),
+('750e8400-e29b-41d4-a716-446655440003', 'max_scenario_age_days', '180', 'GLOBAL'),
+('750e8400-e29b-41d4-a716-446655440004', 'soft_boundary_penalty_points', '15', 'GLOBAL');
+
+-- ---------- ENGINEERING STANDARDS REFERENCE ------------
+
+/*
+Engineering Standards (from conversation):
+
+1. Schema-Registry File
+   - This file (/db/schema.sql) is the single source of truth
+   - Every migration must update this file
+   - CI checks for drift between this file and production
+
+2. Enum Master List
+   - All status/enum fields reference lookup tables or PostgreSQL ENUM types
+   - No inline string enums in application code
+   - Additions require PR + migration
+
+3. Naming-Linter Rules
+   - PK = <Table>_ID
+   - FK contains parent name (Program_ID, Scenario_ID)
+   - Timestamps end with _At
+   - No CamelCase
+   - Singular table names
+   - Snake_case columns
+
+4. Read-Replica Pattern
+   - Primary for writes + OLTP reads
+   - Read replicas for:
+     - Materialized views (EffectiveCoverage, vw_program_printable)
+     - OLAP/reporting queries
+     - Search operations
+   - Connection pool tag: READONLY
+*/
+
+-- ---------- END OF SCHEMA ------------

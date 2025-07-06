@@ -1,0 +1,274 @@
+-- Hardened Core Logic SQL (v3 - Enterprise/Legendary)
+-- Generated on 2025-07-05
+-- This version builds upon the "bulletproof" logic by adding an ecosystem of
+-- advanced governance, observability, and patterns for extreme performance.
+--
+-- ENTERPRISE CONSIDERATIONS:
+-- 1. Schema Migrations: This file should be managed and deployed via a dedicated
+--    schema migration tool (e.g., Flyway, Sqitch) rather than run manually.
+-- 2. Advanced Testing: Supplement standard unit tests with property-based
+--    testing (e.g., pg_quickcheck) to discover edge cases.
+-- 3. Offloaded Hashing: For massive scale, the SHA-256 digest calculation should be
+--    offloaded to application workers before data is enqueued.
+
+------------------------------------------------------------
+-- 0. SCHEMA NOTES
+------------------------------------------------------------
+-- Schema "core"  : immutable business tables + upsert API
+-- Schema "import": staging, sandboxing, async queue
+-- All DDL below assumes both schemas already exist.
+
+------------------------------------------------------------
+-- 1. AUXILIARY & GOVERNANCE TABLES
+------------------------------------------------------------
+
+-- Hash ledger to ensure idempotent upserts
+-- NOTE: For extreme scale (>100M entities), partition this table by entity_type.
+CREATE TABLE IF NOT EXISTS core.VersionHash (
+    entity_type TEXT NOT NULL,
+    entity_id   UUID NOT NULL,
+    hash        TEXT NOT NULL,
+    created_at  TIMESTAMPTZ DEFAULT now(),
+    PRIMARY KEY (entity_type, entity_id)
+);
+
+-- Registry of JSON‑Schemas. Now includes full audit fields.
+CREATE TABLE IF NOT EXISTS core.PayloadSchema (
+    entity_type TEXT NOT NULL,
+    version     INT  NOT NULL,
+    is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+    schema_sha  TEXT NOT NULL UNIQUE,
+    schema_json JSONB NOT NULL,
+    created_at  TIMESTAMPTZ DEFAULT now(),
+    created_by  TEXT, -- User/service ID that created the rule
+    updated_at  TIMESTAMPTZ,
+    updated_by  TEXT,
+    change_reason TEXT,
+    PRIMARY KEY (entity_type, version)
+);
+
+-- Advanced business/semantic rules. Now includes full audit fields.
+CREATE TABLE IF NOT EXISTS core.DomainRule (
+    rule_id     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    entity_type TEXT NOT NULL,
+    field_path  TEXT NOT NULL,
+    expression  TEXT NOT NULL,
+    severity    TEXT CHECK (severity IN ('WARN','BLOCK')) NOT NULL,
+    created_at  TIMESTAMPTZ DEFAULT now(),
+    created_by  TEXT,
+    updated_at  TIMESTAMPTZ,
+    updated_by  TEXT,
+    change_reason TEXT
+);
+
+-- NEW: History table to track all changes to governance rules.
+CREATE TABLE IF NOT EXISTS core.RuleHistory (
+    history_id      BIGSERIAL PRIMARY KEY,
+    table_name      TEXT NOT NULL,
+    record_id       TEXT NOT NULL,
+    operation       TEXT NOT NULL, -- 'INSERT', 'UPDATE', 'DELETE'
+    changed_by      TEXT,
+    changed_at      TIMESTAMPTZ DEFAULT now(),
+    previous_state  JSONB
+);
+
+-- Async job queue for decoupled import processing
+CREATE TABLE IF NOT EXISTS import.ImportQueue (
+    job_id      BIGSERIAL PRIMARY KEY,
+    tenant_id   UUID NOT NULL,
+    import_id   UUID NOT NULL,
+    payload     JSONB NOT NULL,
+    schema_sha  TEXT NOT NULL,
+    entity_type TEXT NOT NULL,
+    state       TEXT CHECK (state IN ('PENDING','RUNNING','FAILED','DONE')) DEFAULT 'PENDING',
+    retries     INT  DEFAULT 0,
+    next_run_at TIMESTAMPTZ DEFAULT now(),
+    last_error  TEXT
+);
+
+-- NEW: Dedicated table for structured error logging.
+CREATE TABLE IF NOT EXISTS core.ErrorLog (
+    error_id    BIGSERIAL PRIMARY KEY,
+    job_id      BIGINT, -- FK to import.ImportQueue
+    tenant_id   UUID,
+    entity_id   UUID,
+    error_code  TEXT,
+    error_message TEXT,
+    stack_trace TEXT,
+    created_at  TIMESTAMPTZ DEFAULT now()
+);
+
+------------------------------------------------------------
+-- 2. GOVERNANCE TRIGGERS
+------------------------------------------------------------
+-- NEW: Universal trigger to log changes to rule tables into RuleHistory.
+CREATE OR REPLACE FUNCTION core.trg_log_rule_change()
+RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+    v_record_id TEXT;
+BEGIN
+    v_record_id := OLD.rule_id::TEXT; -- Generic for DomainRule, adapt as needed
+    IF TG_TABLE_NAME = 'payloadschema' THEN
+        v_record_id := OLD.schema_sha;
+    END IF;
+
+    IF (TG_OP = 'UPDATE') THEN
+        INSERT INTO core.RuleHistory(table_name, record_id, operation, changed_by, previous_state)
+        VALUES (TG_TABLE_NAME, v_record_id, TG_OP, OLD.updated_by, to_jsonb(OLD));
+        RETURN NEW;
+    ELSIF (TG_OP = 'DELETE') THEN
+        INSERT INTO core.RuleHistory(table_name, record_id, operation, changed_by, previous_state)
+        VALUES (TG_TABLE_NAME, v_record_id, TG_OP, OLD.updated_by, to_jsonb(OLD));
+        RETURN OLD;
+    END IF;
+    RETURN NULL;
+END;
+$$;
+
+-- Attach the trigger to governance tables
+CREATE TRIGGER domainrule_history
+AFTER UPDATE OR DELETE ON core.DomainRule
+FOR EACH ROW EXECUTE FUNCTION core.trg_log_rule_change();
+
+CREATE TRIGGER payloadschema_history
+AFTER UPDATE OR DELETE ON core.PayloadSchema
+FOR EACH ROW EXECUTE FUNCTION core.trg_log_rule_change();
+
+------------------------------------------------------------
+-- 3. SECURITY HARDENING (Unchanged from v2)
+------------------------------------------------------------
+CREATE OR REPLACE FUNCTION core.trg_no_delete()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    RAISE EXCEPTION 'Hard-delete prohibited on %', TG_TABLE_NAME;
+END;
+$$;
+-- NOTE: This pattern must be applied to ALL core data tables.
+
+------------------------------------------------------------
+-- 4. HELPER & DIAGNOSTIC FUNCTIONS
+------------------------------------------------------------
+CREATE OR REPLACE FUNCTION core.fn_tenant_entity_lock(p_tenant UUID, p_entity UUID)
+RETURNS BOOLEAN LANGUAGE plpgsql AS $$
+BEGIN
+    RETURN pg_try_advisory_xact_lock(
+        ('x' || substr(md5(p_tenant::text),1,16))::bit(64)::bigint,
+        ('x' || substr(md5(p_entity::text),1,16))::bit(64)::bigint
+    );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION core.fn_emit_event(p_event TEXT, p_payload JSONB)
+RETURNS VOID LANGUAGE plpgsql AS $$
+BEGIN
+    INSERT INTO core.SystemEvents(event_type, payload) VALUES (p_event, p_payload);
+END;
+$$;
+
+-- NEW: Helper for inserting structured logs.
+CREATE OR REPLACE FUNCTION core.fn_log_error(
+    p_job_id BIGINT, p_tenant_id UUID, p_entity_id UUID,
+    p_error_code TEXT, p_error_message TEXT, p_stack_trace TEXT
+)
+RETURNS VOID LANGUAGE plpgsql AS $$
+BEGIN
+    INSERT INTO core.ErrorLog(job_id, tenant_id, entity_id, error_code, error_message, stack_trace)
+    VALUES (p_job_id, p_tenant_id, p_entity_id, p_error_code, p_error_message, p_stack_trace);
+END;
+$$;
+
+------------------------------------------------------------
+-- 5. DETERMINISTIC UPSERT FUNCTION (Lender Example v3)
+------------------------------------------------------------
+CREATE OR REPLACE FUNCTION core.fn_upsert_lender(
+    _tenant      UUID,
+    _payload     JSONB,
+    _schema_sha  TEXT,
+    _job_id      BIGINT DEFAULT NULL, -- For linking logs
+    _is_dry_run  BOOLEAN DEFAULT FALSE -- For "what-if" analysis
+) RETURNS JSONB -- Return type is now JSONB for richer responses
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_start_time TIMESTAMPTZ := clock_timestamp();
+    v_duration_ms INT;
+    v_schema_ok  BOOLEAN;
+    v_lender_id  UUID;
+    v_hash       TEXT;
+    v_last_hash  TEXT;
+    v_sqlstate   TEXT;
+    v_message    TEXT;
+    v_context    TEXT;
+BEGIN
+    v_lender_id := (_payload ->> 'lender_id')::uuid;
+    IF v_lender_id IS NULL THEN
+        RAISE EXCEPTION 'Payload is missing required key: lender_id';
+    END IF;
+
+    -- 5.1 Schema validation
+    SELECT TRUE INTO v_schema_ok FROM core.PayloadSchema
+    WHERE entity_type = 'Lender' AND schema_sha = _schema_sha AND is_active = TRUE;
+    IF NOT v_schema_ok THEN
+        RAISE EXCEPTION 'Schema fingerprint is invalid or inactive for Lender: %', _schema_sha;
+    END IF;
+
+    -- 5.2 Lock acquisition
+    IF NOT core.fn_tenant_entity_lock(_tenant, v_lender_id) THEN
+        RAISE EXCEPTION 'Lock acquisition failed for lender %', v_lender_id;
+    END IF;
+
+    -- 5.3 Idempotency Check
+    SELECT encode(digest(_payload::text, 'sha256'), 'hex') INTO v_hash;
+    SELECT hash INTO v_last_hash FROM core.VersionHash
+    WHERE entity_type = 'Lender' AND entity_id = v_lender_id;
+
+    IF v_hash = v_last_hash THEN
+        v_duration_ms := (clock_timestamp() - v_start_time) * 1000;
+        RETURN jsonb_build_object('status', 'NO_OP', 'reason', 'Hash match', 'duration_ms', v_duration_ms);
+    END IF;
+
+    -- 5.4 Dry Run Check: Stop before any writes
+    IF _is_dry_run THEN
+        v_duration_ms := (clock_timestamp() - v_start_time) * 1000;
+        RETURN jsonb_build_object('status', 'DRY_RUN', 'action', 'UPSERT', 'reason', 'Hash mismatch', 'duration_ms', v_duration_ms);
+    END IF;
+
+    -- == DML Operations Begin ==
+    -- 5.5 Close prior version
+    UPDATE core.Lenders SET active = FALSE, valid_to = now()
+    WHERE lender_id = v_lender_id AND active = TRUE;
+
+    -- 5.6 Insert new version
+    INSERT INTO core.Lenders (lender_id, tenant_id, name, data_json, active, valid_from)
+    VALUES (v_lender_id, _tenant, _payload ->> 'name', _payload, TRUE, now());
+
+    -- 5.7 Update VersionHash ledger
+    INSERT INTO core.VersionHash(entity_type, entity_id, hash)
+    VALUES ('Lender', v_lender_id, v_hash)
+    ON CONFLICT (entity_type, entity_id) DO UPDATE SET hash = EXCLUDED.hash;
+
+    -- 5.8 Emit SystemEvent with performance metric
+    v_duration_ms := (clock_timestamp() - v_start_time) * 1000;
+    PERFORM core.fn_emit_event(
+        'LENDER_UPDATED',
+        jsonb_build_object(
+            'lender_id', v_lender_id, 'tenant', _tenant, 'hash', v_hash, 'duration_ms', v_duration_ms
+        )
+    );
+
+    RETURN jsonb_build_object('status', 'UPSERTED', 'lender_id', v_lender_id, 'hash', v_hash, 'duration_ms', v_duration_ms);
+
+EXCEPTION
+    WHEN OTHERS THEN
+        GET STACKED DIAGNOSTICS
+            v_sqlstate = RETURNED_SQLSTATE,
+            v_message = MESSAGE_TEXT,
+            v_context = PG_EXCEPTION_CONTEXT;
+        -- Log the error to the dedicated table before re-raising
+        PERFORM core.fn_log_error(
+            _job_id, _tenant, v_lender_id,
+            v_sqlstate, v_message, v_context
+        );
+        RAISE; -- Re-raise the original error to fail the transaction
+END;
+$$;

@@ -1,0 +1,218 @@
+-- ============================================================
+-- Universal Import Logic v5+ – Flawless Edition
+-- Incremental DDL for integration with immutable E = mc² core
+-- ============================================================
+
+-- Requirements:
+--   • PostgreSQL 14+
+--   • Extensions: pg_trgm, fuzzystrmatch, pgcrypto, unaccent, icu_collations
+
+-- ------------------------------------------------------------
+-- 0. Extensions (safe‑create)
+-- ------------------------------------------------------------
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS unaccent;
+-- ICU collations require superuser setup in postgresql.conf
+
+-- ------------------------------------------------------------
+-- 1. Attribute & Synonym Governance
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS AttributeCategory (
+    id            SERIAL PRIMARY KEY,
+    name          TEXT UNIQUE NOT NULL,
+    created_at    TIMESTAMP DEFAULT now()
+);
+
+INSERT INTO AttributeCategory (name)
+VALUES ('Borrower'), ('Loan'), ('Lender'), ('Program'), ('Property'), ('Other')
+ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS CardDefinition (
+    id          SERIAL PRIMARY KEY,          -- existing from E = mc²
+    name        TEXT UNIQUE NOT NULL
+);
+
+-- Map each category to a default card (adjust IDs to match your seed data)
+CREATE TABLE IF NOT EXISTS CardTemplateMapping (
+    category_id INT REFERENCES AttributeCategory(id) ON DELETE CASCADE,
+    card_id     INT REFERENCES CardDefinition(id)    ON DELETE CASCADE,
+    PRIMARY KEY (category_id)
+);
+
+-- Synonym dictionary with semantic versioning
+CREATE TABLE IF NOT EXISTS SynonymDictionary (
+    id                SERIAL PRIMARY KEY,
+    canonical_field   TEXT NOT NULL,
+    synonym           TEXT NOT NULL,
+    confidence_default NUMERIC(3,2) DEFAULT 0.75,
+    lang_code         TEXT DEFAULT 'en',
+    semver            TEXT DEFAULT '1.0.0',
+    created_at        TIMESTAMP DEFAULT now(),
+    created_by        TEXT,
+    retired_at        TIMESTAMP
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_synonym_unique
+  ON SynonymDictionary (lower(synonym), lang_code);
+
+-- ------------------------------------------------------------
+-- 2. AttributeDefinition – extend existing table
+-- ------------------------------------------------------------
+ALTER TABLE AttributeDefinition
+    ADD COLUMN IF NOT EXISTS category_id   INT REFERENCES AttributeCategory(id),
+    ADD COLUMN IF NOT EXISTS card_id       INT REFERENCES CardDefinition(id),
+    ADD COLUMN IF NOT EXISTS question_id   INT REFERENCES Questions(id),   -- Questions is pre‑existing
+    ADD COLUMN IF NOT EXISTS usage_count   INT DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS first_used_at TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS review_status TEXT DEFAULT 'active',          -- active | dormant | retired
+    ADD COLUMN IF NOT EXISTS dormant_at    TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS external_row_id TEXT,                         -- delta/UPSERT mode
+    ADD COLUMN IF NOT EXISTS synonym_version TEXT DEFAULT '1.0.0';
+
+-- ------------------------------------------------------------
+-- 3. Import Sandbox & Diff
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS ImportSandbox (
+    import_id    UUID PRIMARY KEY,
+    schema_name  TEXT NOT NULL,
+    created_at   TIMESTAMP DEFAULT now(),
+    expires_at   TIMESTAMP
+);
+
+-- Pointer to HTML diff stored in object storage / CDN
+ALTER TABLE Import_Raw
+    ADD COLUMN IF NOT EXISTS diff_html_path TEXT;
+
+-- ------------------------------------------------------------
+-- 4. Token‑Bucket Rate Limiter (per tenant)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS TenantRateLimiter (
+    tenant_id   UUID PRIMARY KEY,
+    tokens      INT NOT NULL DEFAULT 10,
+    last_refill TIMESTAMP DEFAULT now()
+);
+
+-- Simple refill function (called every minute by cron or pg_cron)
+CREATE OR REPLACE FUNCTION fn_refill_tokens()
+RETURNS void LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE TenantRateLimiter
+  SET tokens = 10,
+      last_refill = now()
+  WHERE tokens < 10;
+END;
+$$;
+
+-- ------------------------------------------------------------
+-- 5. Conflict Resolution & Governance
+-- ------------------------------------------------------------
+-- Store resolved conflicts for future learning
+CREATE TABLE IF NOT EXISTS ConflictResolutionLog (
+    id SERIAL PRIMARY KEY,
+    import_id UUID REFERENCES Import_Raw(id),
+    conflicting_row_id TEXT,
+    conflict_description TEXT NOT NULL,
+    conflicting_values JSONB,
+    resolution_decision TEXT NOT NULL,
+    resolved_by_user_id UUID,
+    resolved_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    is_automated_resolution BOOLEAN DEFAULT false
+);
+CREATE INDEX IF NOT EXISTS idx_conflict_description ON ConflictResolutionLog (conflict_description);
+
+-- Track attribute mutations (create, rename, merge, retire)
+CREATE TABLE IF NOT EXISTS AttributeLineage (
+    id BIGSERIAL PRIMARY KEY,
+    attribute_id INT NOT NULL REFERENCES AttributeDefinition(id),
+    event_type TEXT NOT NULL,
+    event_details JSONB,
+    event_context TEXT,
+    source_import_id UUID REFERENCES Import_Raw(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_attribute_lineage_attribute_id ON AttributeLineage (attribute_id);
+
+-- Store trend data for proactive governance
+CREATE TABLE IF NOT EXISTS GovernanceTrends (
+    id SERIAL PRIMARY KEY,
+    trend_type TEXT,
+    entity_id INT,
+    trend_data JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- ------------------------------------------------------------
+-- 6. PII Deep‑Scan & Encryption Helpers
+-- ------------------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_redact_ssn(ssn TEXT)
+RETURNS TEXT LANGUAGE plpgsql IMMUTABLE AS $$
+BEGIN
+  RETURN regexp_replace(ssn, '\d', 'X', 'g');
+END;
+$$;
+
+-- Example encrypt helper (AES‑256)
+CREATE OR REPLACE FUNCTION fn_encrypt_pii(clear TEXT, key TEXT)
+RETURNS BYTEA LANGUAGE sql IMMUTABLE AS $$
+SELECT pgp_sym_encrypt(clear, key, 'cipher-algo=aes256');
+$$;
+
+-- ------------------------------------------------------------
+-- 7. Advisory‑Lock helpers for duplicate merge
+-- ------------------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_tenant_lock(tenant_uuid UUID)
+RETURNS BOOL LANGUAGE plpgsql AS $$
+BEGIN
+  RETURN pg_try_advisory_xact_lock(('x' || substr(replace(tenant_uuid::text,'-',''),1,16))::bit(64)::bigint);
+END;
+$$;
+
+-- ------------------------------------------------------------
+-- 8. Views for Dormant Attribute Monitoring
+-- ------------------------------------------------------------
+CREATE OR REPLACE VIEW vw_dormant_attributes AS
+SELECT *
+FROM AttributeDefinition
+WHERE review_status = 'dormant';
+
+-- ------------------------------------------------------------
+-- 9. BRIN index for large Import_Raw tables (example)
+-- ------------------------------------------------------------
+CREATE INDEX IF NOT EXISTS brin_import_raw_created_at
+  ON Import_Raw USING brin (created_at);
+
+-- ------------------------------------------------------------
+-- 10. Nightly Jobs (placeholders – actual scheduling via pg_cron/cron‑like)
+-- ------------------------------------------------------------
+-- 10.1 Mark dormant attributes
+CREATE OR REPLACE FUNCTION fn_mark_dormant_attributes()
+RETURNS void LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE AttributeDefinition
+  SET review_status = 'dormant',
+      dormant_at = now()
+  WHERE review_status = 'active'
+    AND usage_count < 5
+    AND first_used_at < now() - interval '180 days';
+END;
+$$;
+
+-- 10.2 Purge expired sandboxes
+CREATE OR REPLACE FUNCTION fn_purge_sandboxes()
+RETURNS void LANGUAGE plpgsql AS $$
+DECLARE
+  r RECORD;
+BEGIN
+  FOR r IN SELECT * FROM ImportSandbox WHERE expires_at < now()
+  LOOP
+    EXECUTE format('DROP SCHEMA IF EXISTS %I CASCADE;', r.schema_name);
+    DELETE FROM ImportSandbox WHERE import_id = r.import_id;
+  END LOOP;
+END;
+$$;
+
+-- ============================================================
+-- End of Universal Import Logic v5+ DDL
+-- ============================================================
