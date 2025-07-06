@@ -37,7 +37,7 @@ services:
   emc2-core:
     build:
       context: ./services/emc2-core
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: mortgage_broker_emc2_core
     restart: unless-stopped
     ports:
@@ -49,12 +49,19 @@ services:
       - DB_NAME=mortgage_broker_pro
       - DB_USER=mortgage_user
       - DB_PASSWORD=mortgage_pass
+    env_file:
+      - .env
+      - .env.azure
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
-      - ./services/emc2-core:/app
-      - /app/node_modules
+      # Mount source code only, not node_modules
+      - ./services/emc2-core/src:/app/src
+      - ./services/emc2-core/package.json:/app/package.json
+      - ./services/emc2-core/package-lock.json:/app/package-lock.json
+      - ./services/emc2-core/tsconfig.json:/app/tsconfig.json
+      - ./services/emc2-core/nodemon.json:/app/nodemon.json
     command: npm run dev
 
 volumes:

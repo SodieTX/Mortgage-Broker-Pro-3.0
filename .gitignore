@@ -2,6 +2,8 @@
 .env
 .env.local
 .env.*.local
+.env.azure
+!.env.azure.example
 
 # Database
 *.sql.backup
@@ -55,3 +57,13 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+
+# Configuration files
+config/*.json
+config/*.encrypted
+!config/*.example.json
+
+# Security
+*.key
+*.pem
+*.cert
