@@ -18,6 +18,9 @@
   "author": "Mortgage Broker Pro",
   "license": "PRIVATE",
   "dependencies": {
+    "@fastify/jwt": "^9.1.0",
+    "@types/bcrypt": "^5.0.2",
+    "bcrypt": "^6.0.0",
     "dotenv": "^16.3.1",
     "fastify": "^4.25.2",
     "pg": "^8.11.3",

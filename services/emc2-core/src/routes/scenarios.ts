@@ -9,14 +9,10 @@ import { getDatabase } from '../db/connection';
 import { ScenarioService } from '../services/scenarioService';
 import { CreateScenarioDTO, UpdateScenarioDTO, ScenarioStatus } from '../types/scenario';
 import { validateScenarioCreate, validateLoanData } from '../utils/validation';
-import { authenticate } from '../middleware/auth';
 
 export async function scenarioRoutes(server: FastifyInstance) {
   const db = await getDatabase();
   const scenarioService = new ScenarioService(db);
-  
-  // Add authentication to all routes in this prefix
-  server.addHook('onRequest', authenticate);
   
   // Create a new scenario
   server.post<{

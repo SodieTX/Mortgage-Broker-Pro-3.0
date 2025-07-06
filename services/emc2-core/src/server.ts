@@ -5,10 +5,12 @@
  */
 
 import Fastify from 'fastify';
+import fastifyJwt from '@fastify/jwt';
 import { logger } from './utils/logger';
 import { healthRoutes } from './routes/health';
 import { scenarioRoutes } from './routes/scenarios';
 import { calculationRoutes } from './routes/calculations';
+import { authRoutes } from './routes/auth';
 import { getDatabase } from './db/connection';
 
 export async function createServer() {
@@ -16,6 +18,20 @@ export async function createServer() {
   const server = Fastify({
     logger: logger,
     trustProxy: true
+  });
+  
+  // Register JWT plugin
+  await server.register(fastifyJwt, {
+    secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production'
+  });
+  
+  // Add authenticate decorator
+  server.decorate('authenticate', async function(request: any, reply: any) {
+    try {
+      await request.jwtVerify();
+    } catch (err) {
+      reply.send(err);
+    }
   });
   
   // Register health check routes
@@ -26,6 +42,9 @@ export async function createServer() {
   
   // Register calculation routes with prefix
   await server.register(calculationRoutes, { prefix: '/api/v1' });
+  
+  // Register auth routes
+  await server.register(authRoutes, { prefix: '/api/v1' });
   
   // Add a simple root route
   server.get('/', async () => {
