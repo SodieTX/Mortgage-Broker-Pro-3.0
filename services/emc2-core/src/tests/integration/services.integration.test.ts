@@ -204,13 +204,12 @@ describe('Service Integration Tests', () => {
 
     beforeAll(async () => {
       // Create a user and get auth token
-      const userResult = await db.query(
+      await db.query(
         `INSERT INTO auth.users (email, first_name, last_name, password_hash, role)
          VALUES ($1, $2, $3, $4, 'broker')
          RETURNING id`,
         ['scenario-test@example.com', 'Scenario', 'Test', 'hashed']
       );
-      // userId = userResult.rows[0].id; // Not used
       
       // Create auth token (in real app, this would be via login)
       const authResponse = await app.inject({
