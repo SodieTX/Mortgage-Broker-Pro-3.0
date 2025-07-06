@@ -7,6 +7,7 @@
 import Fastify from 'fastify';
 import { logger } from './utils/logger';
 import { healthRoutes } from './routes/health';
+import { scenarioRoutes } from './routes/scenarios';
 import { getDatabase } from './db/connection';
 
 export async function createServer() {
@@ -18,6 +19,9 @@ export async function createServer() {
   
   // Register health check routes
   await server.register(healthRoutes);
+  
+  // Register scenario routes with prefix
+  await server.register(scenarioRoutes, { prefix: '/api/v1' });
   
   // Add a simple root route
   server.get('/', async () => {
