@@ -12,6 +12,7 @@ import { scenarioRoutes } from './routes/scenarios';
 import { calculationRoutes } from './routes/calculations';
 import { authRoutes } from './routes/auth';
 import reportRoutes from './routes/reportRoutes';
+import emailRoutes from './routes/emailRoutes';
 import { getDatabase } from './db/connection';
 
 export async function createServer() {
@@ -49,6 +50,9 @@ export async function createServer() {
   
   // Register report routes
   await server.register(reportRoutes);
+  
+  // Register email routes
+  await server.register(emailRoutes);
   
   // Add a simple root route
   server.get('/', async () => {
