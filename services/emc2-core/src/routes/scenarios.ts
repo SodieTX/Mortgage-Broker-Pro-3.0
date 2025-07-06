@@ -8,16 +8,41 @@ import { FastifyInstance } from 'fastify';
 import { getDatabase } from '../db/connection';
 import { ScenarioService } from '../services/scenarioService';
 import { CreateScenarioDTO, UpdateScenarioDTO, ScenarioStatus } from '../types/scenario';
+import { validateScenarioCreate, validateLoanData } from '../utils/validation';
+import { authenticate } from '../middleware/auth';
 
 export async function scenarioRoutes(server: FastifyInstance) {
   const db = await getDatabase();
   const scenarioService = new ScenarioService(db);
+  
+  // Add authentication to all routes in this prefix
+  server.addHook('onRequest', authenticate);
   
   // Create a new scenario
   server.post<{
     Body: CreateScenarioDTO
   }>('/scenarios', async (request, reply) => {
     try {
+      // Validate required fields
+      const titleValidation = validateScenarioCreate(request.body.title);
+      if (!titleValidation.isValid) {
+        return reply.code(400).send({ 
+          error: 'Validation failed',
+          errors: titleValidation.errors
+        });
+      }
+      
+      // Validate loan data if provided
+      if (request.body.loanData) {
+        const loanValidation = validateLoanData(request.body.loanData);
+        if (!loanValidation.isValid) {
+          return reply.code(400).send({ 
+            error: 'Validation failed',
+            errors: loanValidation.errors
+          });
+        }
+      }
+      
       const scenario = await scenarioService.createScenario(request.body);
       return reply.code(201).send(scenario);
     } catch (error) {

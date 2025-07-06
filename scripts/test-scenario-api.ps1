@@ -3,6 +3,10 @@ Write-Host "Testing Scenario API..." -ForegroundColor Yellow
 Write-Host ""
 
 $baseUrl = "http://localhost:3001/api/v1"
+$headers = @{
+    "x-api-key" = "test-key-for-development"
+    "Content-Type" = "application/json"
+}
 
 # Test 1: Create a scenario
 Write-Host "Test 1: Creating a scenario" -ForegroundColor Cyan
@@ -35,7 +39,7 @@ $createData = @{
 } | ConvertTo-Json -Depth 10
 
 try {
-    $response = Invoke-RestMethod -Uri "$baseUrl/scenarios" -Method Post -Body $createData -ContentType "application/json"
+    $response = Invoke-RestMethod -Uri "$baseUrl/scenarios" -Method Post -Body $createData -Headers $headers
     Write-Host "SUCCESS: Scenario created" -ForegroundColor Green
     $scenarioId = $response.id
     Write-Host "Scenario ID: $scenarioId"
@@ -51,7 +55,7 @@ Write-Host ""
 # Test 2: Get the created scenario
 Write-Host "Test 2: Getting the created scenario" -ForegroundColor Cyan
 try {
-    $response = Invoke-RestMethod -Uri "$baseUrl/scenarios/$scenarioId" -Method Get
+    $response = Invoke-RestMethod -Uri "$baseUrl/scenarios/$scenarioId" -Method Get -Headers @{"x-api-key" = "test-key-for-development"}
     Write-Host "SUCCESS: Retrieved scenario" -ForegroundColor Green
     Write-Host "Title: $($response.title)"
     Write-Host "Status: $($response.status)"
@@ -71,7 +75,7 @@ $updateData = @{
 } | ConvertTo-Json
 
 try {
-    $response = Invoke-RestMethod -Uri "$baseUrl/scenarios/$scenarioId" -Method Put -Body $updateData -ContentType "application/json"
+    $response = Invoke-RestMethod -Uri "$baseUrl/scenarios/$scenarioId" -Method Put -Body $updateData -Headers $headers
     Write-Host "SUCCESS: Scenario updated" -ForegroundColor Green
     Write-Host "New status: $($response.status)"
 } catch {
@@ -84,7 +88,7 @@ Write-Host ""
 # Test 4: List scenarios
 Write-Host "Test 4: Listing scenarios" -ForegroundColor Cyan
 try {
-    $response = Invoke-RestMethod -Uri "$baseUrl/scenarios?limit=10" -Method Get
+    $response = Invoke-RestMethod -Uri "$baseUrl/scenarios?limit=10" -Method Get -Headers @{"x-api-key" = "test-key-for-development"}
     Write-Host "SUCCESS: Retrieved scenario list" -ForegroundColor Green
     Write-Host "Total scenarios: $($response.total)"
     Write-Host "Retrieved: $($response.scenarios.Count)"
@@ -98,7 +102,7 @@ Write-Host ""
 # Test 5: Delete the scenario
 Write-Host "Test 5: Deleting the scenario" -ForegroundColor Cyan
 try {
-    Invoke-RestMethod -Uri "$baseUrl/scenarios/$scenarioId" -Method Delete
+    Invoke-RestMethod -Uri "$baseUrl/scenarios/$scenarioId" -Method Delete -Headers @{"x-api-key" = "test-key-for-development"}
     Write-Host "SUCCESS: Scenario deleted" -ForegroundColor Green
 } catch {
     Write-Host "ERROR: Failed to delete scenario" -ForegroundColor Red
