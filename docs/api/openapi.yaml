@@ -1,0 +1,804 @@
+openapi: 3.0.3
+info:
+  title: Mortgage Broker Pro API
+  description: |
+    RESTful API for the Mortgage Broker Pro system. This API provides endpoints for managing
+    lenders, programs, scenarios, offers, and the complete loan shopping workflow.
+    
+    ## Authentication
+    All endpoints require authentication using Bearer tokens. Include the token in the Authorization header:
+    ```
+    Authorization: Bearer <your-token>
+    ```
+    
+    ## Rate Limiting
+    API requests are limited to 100 requests per minute per API key.
+    
+    ## Versioning
+    The API is versioned through the URL path (e.g., /api/v1/). Breaking changes will result in a new version.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: api@mortgagebroker.pro
+  license:
+    name: Proprietary
+    
+servers:
+  - url: https://api.mortgagebroker.pro/v1
+    description: Production server
+  - url: https://staging-api.mortgagebroker.pro/v1
+    description: Staging server
+  - url: http://localhost:8080/api/v1
+    description: Local development
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Lenders
+    description: Lender management operations
+  - name: Programs
+    description: Loan program management
+  - name: Scenarios
+    description: Loan scenario operations
+  - name: Offers
+    description: Offer management
+  - name: Borrowers
+    description: Borrower management
+  - name: Properties
+    description: Property management
+  - name: Reports
+    description: Reporting and analytics
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user and receive access token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: broker@mortgagebroker.pro
+                password:
+                  type: string
+                  format: password
+                  example: SecurePassword123!
+      responses:
+        '200':
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT access token
+                  refresh_token:
+                    type: string
+                    description: Refresh token for token renewal
+                  expires_in:
+                    type: integer
+                    description: Token expiration time in seconds
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: Use refresh token to get new access token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh_token
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          description: New access token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  expires_in:
+                    type: integer
+
+  /lenders:
+    get:
+      tags:
+        - Lenders
+      summary: List all lenders
+      description: Retrieve a paginated list of all active lenders
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: state
+          in: query
+          description: Filter by state coverage
+          schema:
+            type: string
+            pattern: '^[A-Z]{2}$'
+        - name: product_type
+          in: query
+          description: Filter by product type offered
+          schema:
+            type: string
+            enum: [DSCR, Bridge, Construction, Fix and Flip, Portfolio]
+      responses:
+        '200':
+          description: List of lenders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Lender'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+          
+    post:
+      tags:
+        - Lenders
+      summary: Create new lender
+      description: Add a new lender to the system (Admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LenderCreate'
+      responses:
+        '201':
+          description: Lender created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lender'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /lenders/{lenderId}:
+    get:
+      tags:
+        - Lenders
+      summary: Get lender details
+      description: Retrieve detailed information about a specific lender
+      parameters:
+        - $ref: '#/components/parameters/LenderIdParam'
+      responses:
+        '200':
+          description: Lender details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LenderDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /scenarios:
+    get:
+      tags:
+        - Scenarios
+      summary: List user's scenarios
+      description: Retrieve all scenarios created by or assigned to the current user
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: status
+          in: query
+          description: Filter by scenario status
+          schema:
+            type: string
+            enum: [Draft, Matching, Shopped, Offers_In, Presented, Won, Lost, Abandoned]
+        - name: created_after
+          in: query
+          description: Filter scenarios created after this date
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: List of scenarios
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ScenarioSummary'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                    
+    post:
+      tags:
+        - Scenarios
+      summary: Create new scenario
+      description: Create a new loan scenario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScenarioCreate'
+      responses:
+        '201':
+          description: Scenario created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scenario'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /scenarios/{scenarioId}:
+    get:
+      tags:
+        - Scenarios
+      summary: Get scenario details
+      description: Retrieve complete details for a specific scenario
+      parameters:
+        - $ref: '#/components/parameters/ScenarioIdParam'
+      responses:
+        '200':
+          description: Scenario details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /scenarios/{scenarioId}/match:
+    post:
+      tags:
+        - Scenarios
+      summary: Find matching lenders
+      description: Run the matching engine to find eligible lenders for this scenario
+      parameters:
+        - $ref: '#/components/parameters/ScenarioIdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                include_soft_matches:
+                  type: boolean
+                  default: true
+                  description: Include lenders that meet soft criteria but not all hard criteria
+      responses:
+        '200':
+          description: Matching results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  matches:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LenderMatch'
+                  total_matches:
+                    type: integer
+                  confidence_score:
+                    type: number
+                    format: float
+                    minimum: 0
+                    maximum: 100
+
+  /scenarios/{scenarioId}/shop:
+    post:
+      tags:
+        - Scenarios
+      summary: Shop scenario to lenders
+      description: Send the scenario to selected lenders for offers
+      parameters:
+        - $ref: '#/components/parameters/ScenarioIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - lender_ids
+              properties:
+                lender_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  minItems: 1
+                message:
+                  type: string
+                  description: Optional message to include with the scenario
+      responses:
+        '200':
+          description: Shopping initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  round_id:
+                    type: integer
+                  lenders_contacted:
+                    type: integer
+                  estimated_response_time:
+                    type: string
+                    description: Estimated time for responses (e.g., "24-48 hours")
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Page number for pagination
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+        
+    LimitParam:
+      name: limit
+      in: query
+      description: Number of items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+        
+    LenderIdParam:
+      name: lenderId
+      in: path
+      required: true
+      description: Unique identifier of the lender
+      schema:
+        type: string
+        format: uuid
+        
+    ScenarioIdParam:
+      name: scenarioId
+      in: path
+      required: true
+      description: Unique identifier of the scenario
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+            
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+            
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+            
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+
+  schemas:
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: UNAUTHORIZED
+        message:
+          type: string
+          example: Authentication required
+        details:
+          type: object
+          
+    ValidationError:
+      type: object
+      required:
+        - code
+        - message
+        - errors
+      properties:
+        code:
+          type: string
+          example: VALIDATION_ERROR
+        message:
+          type: string
+          example: Validation failed
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+                
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        pages:
+          type: integer
+          
+    User:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        full_name:
+          type: string
+        role:
+          type: string
+          enum: [ADMIN, BROKER, ANALYST, LENDER_REP, VIEWER]
+        active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          
+    Lender:
+      type: object
+      properties:
+        lender_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        website_url:
+          type: string
+          format: uri
+        active:
+          type: boolean
+        profile_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+        program_count:
+          type: integer
+        state_coverage:
+          type: array
+          items:
+            type: string
+            pattern: '^[A-Z]{2}$'
+            
+    LenderDetail:
+      allOf:
+        - $ref: '#/components/schemas/Lender'
+        - type: object
+          properties:
+            contact_name:
+              type: string
+            contact_email:
+              type: string
+              format: email
+            contact_phone:
+              type: string
+            notes:
+              type: string
+            programs:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProgramSummary'
+                
+    LenderCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        website_url:
+          type: string
+          format: uri
+        contact_name:
+          type: string
+        contact_email:
+          type: string
+          format: email
+        contact_phone:
+          type: string
+        notes:
+          type: string
+          
+    ProgramSummary:
+      type: object
+      properties:
+        program_id:
+          type: string
+          format: uuid
+        program_version:
+          type: integer
+        product_type:
+          type: string
+        name:
+          type: string
+        active:
+          type: boolean
+        key_criteria:
+          type: object
+          properties:
+            min_loan_amount:
+              type: number
+            max_loan_amount:
+              type: number
+            max_ltv:
+              type: number
+            min_fico:
+              type: integer
+            min_dscr:
+              type: number
+              
+    ScenarioSummary:
+      type: object
+      properties:
+        scenario_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [Draft, Matching, Shopped, Offers_In, Presented, Won, Lost, Abandoned]
+        confidence_score:
+          type: number
+          format: float
+        loan_amount:
+          type: number
+        property_type:
+          type: string
+        property_state:
+          type: string
+        borrower_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+          
+    Scenario:
+      allOf:
+        - $ref: '#/components/schemas/ScenarioSummary'
+        - type: object
+          properties:
+            notes:
+              type: string
+            answers:
+              type: array
+              items:
+                type: object
+                properties:
+                  question_id:
+                    type: string
+                    format: uuid
+                  answer_value:
+                    type: string
+                    
+    ScenarioDetail:
+      allOf:
+        - $ref: '#/components/schemas/Scenario'
+        - type: object
+          properties:
+            borrowers:
+              type: array
+              items:
+                $ref: '#/components/schemas/BorrowerSummary'
+            properties:
+              type: array
+              items:
+                $ref: '#/components/schemas/PropertySummary'
+            shopping_rounds:
+              type: array
+              items:
+                $ref: '#/components/schemas/ShoppingRound'
+            offers:
+              type: array
+              items:
+                $ref: '#/components/schemas/OfferSummary'
+                
+    ScenarioCreate:
+      type: object
+      properties:
+        notes:
+          type: string
+        borrower_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        property_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+            
+    BorrowerSummary:
+      type: object
+      properties:
+        borrower_id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+        entity_type:
+          type: string
+          enum: [Individual, LLC, Corporation, Partnership, Trust]
+        role:
+          type: string
+          
+    PropertySummary:
+      type: object
+      properties:
+        property_id:
+          type: string
+          format: uuid
+        address_line1:
+          type: string
+        city:
+          type: string
+        state_code:
+          type: string
+        property_type:
+          type: string
+          
+    ShoppingRound:
+      type: object
+      properties:
+        round_id:
+          type: integer
+        started_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: string
+          format: date-time
+        lenders_contacted:
+          type: integer
+        responses_received:
+          type: integer
+          
+    OfferSummary:
+      type: object
+      properties:
+        offer_id:
+          type: string
+          format: uuid
+        lender_name:
+          type: string
+        program_name:
+          type: string
+        status:
+          type: string
+          enum: [Indicative, Soft, Firm]
+        rate:
+          type: number
+          format: float
+        loan_amount:
+          type: number
+        ltv:
+          type: number
+          format: float
+        total_fees:
+          type: number
+        received_at:
+          type: string
+          format: date-time
+          
+    LenderMatch:
+      type: object
+      properties:
+        lender_id:
+          type: string
+          format: uuid
+        lender_name:
+          type: string
+        match_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+        matching_programs:
+          type: array
+          items:
+            type: object
+            properties:
+              program_id:
+                type: string
+                format: uuid
+              program_name:
+                type: string
+              match_type:
+                type: string
+                enum: [HARD, SOFT]
+              unmet_criteria:
+                type: array
+                items:
+                  type: string
