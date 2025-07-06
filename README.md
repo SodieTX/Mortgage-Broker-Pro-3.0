@@ -1,4 +1,4 @@
-# Mortgage Broker Pro 2.0
+# Mortgage Broker Pro 3.0
 
 A sophisticated loan scenario matching platform that connects mortgage brokers with optimal lender programs.
 
@@ -29,8 +29,8 @@ The system consists of four core services:
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd Mortgage-Broker-Pro-2.0
+git clone https://github.com/SodieTX/Mortgage-Broker-Pro-3.0.git
+cd Mortgage-Broker-Pro-3.0
 ```
 
 2. Start the local database:
@@ -46,7 +46,7 @@ docker-compose up -d
 ## Project Structure
 
 ```
-Mortgage-Broker-Pro-2.0/
+Mortgage-Broker-Pro-3.0/
 ├── database/           # Database schemas and migrations
 ├── services/           # Microservices architecture
 ├── docs/              # Documentation
