@@ -268,6 +268,72 @@ const emailRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.code(500).send({ error: 'Webhook processing failed' });
     }
   });
+  
+  /**
+   * Test email endpoint (requires authentication)
+   */
+  fastify.post('/api/email/test', {
+    onRequest: [fastify.authenticate],
+    schema: {
+      body: {
+        type: 'object',
+        properties: {
+          to: { type: 'string', format: 'email' },
+          provider: { type: 'string' }
+        },
+        required: ['to']
+      }
+    }
+  }, async (
+    request: FastifyRequest<{ Body: { to: string; provider?: string } }>,
+    reply: FastifyReply
+  ) => {
+    const { to, provider } = request.body;
+    
+    try {
+      // Import email service
+      const { emailService } = await import('../services/emailService');
+      
+      // Send test email
+      const result = await emailService.sendEmail({
+        to,
+        subject: 'Test Email from Mortgage Broker Pro',
+        html: `
+          <h2>Test Email Successful! 🎉</h2>
+          <p>This is a test email from your Mortgage Broker Pro email system.</p>
+          <p><strong>Configuration Details:</strong></p>
+          <ul>
+            <li>Sent to: ${to}</li>
+            <li>Sent at: ${new Date().toLocaleString()}</li>
+            <li>Provider: ${provider || 'Auto-selected'}</li>
+          </ul>
+          <p>Your email system is working correctly!</p>
+          <hr>
+          <p style="color: #666; font-size: 12px;">
+            This is a test email. If you're seeing this, your email configuration is correct.
+          </p>
+        `,
+        text: `Test Email from Mortgage Broker Pro\n\nThis test email confirms your email system is working correctly.\n\nSent to: ${to}\nSent at: ${new Date().toLocaleString()}\nProvider: ${provider || 'Auto-selected'}`
+      });
+      
+      // Get provider status
+      const providerStatus = emailProviderService.getProviderStatus();
+      
+      return reply.send({
+        success: result,
+        message: result ? 'Test email sent successfully!' : 'Failed to send test email',
+        provider: providerStatus.activeProvider,
+        availableProviders: providerStatus.providers.filter(p => p.enabled).map(p => p.name)
+      });
+    } catch (error) {
+      logger.error('Failed to send test email:', error);
+      return reply.code(500).send({
+        success: false,
+        error: 'Failed to send test email',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
 };
 
 /**

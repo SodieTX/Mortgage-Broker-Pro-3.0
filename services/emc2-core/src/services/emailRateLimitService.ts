@@ -54,6 +54,22 @@ export class EmailRateLimitService {
         interval: 60
       }
     });
+    
+    // Microsoft/Outlook/Office 365 limits
+    this.providerConfigs.set('microsoft', {
+      provider: 'microsoft',
+      limits: {
+        perSecond: 1,
+        perMinute: 30,
+        perHour: 3600,
+        perDay: 10000,
+        concurrent: 20
+      },
+      burst: {
+        tokens: 10,
+        interval: 60
+      }
+    });
 
     // SendGrid limits (free tier)
     this.providerConfigs.set('sendgrid', {

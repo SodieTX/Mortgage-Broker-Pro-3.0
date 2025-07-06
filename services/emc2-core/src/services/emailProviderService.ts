@@ -43,7 +43,7 @@ export class EmailProviderService {
   private async initializeProviders() {
     // Initialize based on environment configuration
     if (process.env.SMTP_HOST) {
-      await this.initializeSMTPProvider('primary-smtp', {
+      const smtpConfig: any = {
         host: process.env.SMTP_HOST,
         port: parseInt(process.env.SMTP_PORT || '587'),
         secure: process.env.SMTP_SECURE === 'true',
@@ -51,7 +51,17 @@ export class EmailProviderService {
           user: process.env.SMTP_USER || '',
           pass: process.env.SMTP_PASS || ''
         }
-      }, 1, 40);
+      };
+      
+      // Add specific TLS options for Microsoft
+      if (process.env.SMTP_HOST.includes('outlook') || process.env.SMTP_HOST.includes('office365')) {
+        smtpConfig.tls = {
+          ciphers: 'SSLv3',
+          rejectUnauthorized: false
+        };
+      }
+      
+      await this.initializeSMTPProvider('primary-smtp', smtpConfig, 1, 40);
     }
 
     // SendGrid
