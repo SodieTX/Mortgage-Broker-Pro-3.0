@@ -38,7 +38,7 @@ afterEach(() => {
 // Mock database connection
 jest.mock('../db/connection', () => ({
   getDatabase: jest.fn(() => Promise.resolve({
-    query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 } as any),
+    query: jest.fn(() => Promise.resolve({ rows: [], rowCount: 0 })),
     connect: jest.fn(),
     end: jest.fn(),
     release: jest.fn(),
@@ -49,16 +49,16 @@ jest.mock('../db/connection', () => ({
 // Mock Redis
 jest.mock('ioredis', () => {
   return jest.fn().mockImplementation(() => ({
-    get: jest.fn().mockResolvedValue(null as any),
-    set: jest.fn().mockResolvedValue('OK' as any),
-    del: jest.fn().mockResolvedValue(1 as any),
-    exists: jest.fn().mockResolvedValue(0 as any),
-    expire: jest.fn().mockResolvedValue(1 as any),
-    ping: jest.fn().mockResolvedValue('PONG' as any),
-    quit: jest.fn().mockResolvedValue(undefined as any),
-    connect: jest.fn().mockResolvedValue(undefined as any),
-    disconnect: jest.fn().mockResolvedValue(undefined as any),
-    flushdb: jest.fn().mockResolvedValue('OK' as any),
+    get: jest.fn(() => Promise.resolve(null)),
+    set: jest.fn(() => Promise.resolve('OK')),
+    del: jest.fn(() => Promise.resolve(1)),
+    exists: jest.fn(() => Promise.resolve(0)),
+    expire: jest.fn(() => Promise.resolve(1)),
+    ping: jest.fn(() => Promise.resolve('PONG')),
+    quit: jest.fn(() => Promise.resolve()),
+    connect: jest.fn(() => Promise.resolve()),
+    disconnect: jest.fn(() => Promise.resolve()),
+    flushdb: jest.fn(() => Promise.resolve('OK')),
     on: jest.fn(),
     off: jest.fn(),
   }));
@@ -67,10 +67,10 @@ jest.mock('ioredis', () => {
 // Mock Bull queue
 jest.mock('bull', () => {
   return jest.fn().mockImplementation(() => ({
-    add: jest.fn().mockResolvedValue({} as any),
+    add: jest.fn(() => Promise.resolve({})),
     process: jest.fn(),
     on: jest.fn(),
-    close: jest.fn().mockResolvedValue(undefined as any),
+    close: jest.fn(() => Promise.resolve()),
   }));
 });
 
