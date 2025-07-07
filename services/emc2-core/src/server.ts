@@ -15,6 +15,7 @@ import reportRoutes from './routes/reportRoutes';
 import emailRoutes from './routes/emailRoutes';
 import taskRoutes from './routes/taskRoutes';
 import { documentRoutes } from './routes/documents';
+import lenderRoutes from './routes/lenders';
 import { taskQueueService } from './services/taskQueueService';
 import { getDatabase } from './db/connection';
 import { Redis } from 'ioredis';
@@ -146,6 +147,7 @@ export async function createServer() {
   await server.register(scenarioRoutes, { prefix: '/api/v1' });
   await server.register(calculationRoutes, { prefix: '/api/v1' });
   await server.register(documentRoutes, { prefix: '/api/v1' });
+  await server.register(lenderRoutes, { prefix: '/api/v1' });
   await server.register(reportRoutes);
   await server.register(emailRoutes);
   await server.register(taskRoutes);
