@@ -11,7 +11,20 @@ chmod +x setup-file-upload.sh
 # 2. Start server
 npm run dev
 
-# 3. Test in another terminal
+# 3. Open the UI in your browser
+# Go to: http://localhost:3001/api/v1/lenders/upload-test
+```
+
+## 🎨 Visual Test (Much Easier!)
+
+1. **Open in browser**: `http://localhost:3001/api/v1/lenders/upload-test`
+2. **Download a sample file** (click the links on the page)
+3. **Drag & drop or click to upload**
+4. **See the parsed data instantly!**
+
+## 🧪 Command Line Test (Optional)
+
+```bash
 node test-file-upload.js
 ```
 

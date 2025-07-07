@@ -341,4 +341,266 @@ export default async function lenderRoutes(fastify: FastifyInstance) {
       });
     }
   });
+
+  // Simple HTML test page for file upload
+  fastify.get('/lenders/upload-test', async (request: FastifyRequest, reply: FastifyReply) => {
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lender File Upload Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007acc;
+        }
+        .upload-area.dragover {
+            border-color: #007acc;
+            background: #f0f8ff;
+        }
+        input[type="file"] {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+        }
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #005999;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+        .success {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+        }
+        .error {
+            background: #ffe8e8;
+            border: 1px solid #f44336;
+        }
+        .data-table {
+            max-height: 300px;
+            overflow: auto;
+            border: 1px solid #ddd;
+            margin-top: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #f5f5f5;
+            font-weight: bold;
+        }
+        .sample-files {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .sample-files h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .sample-files a {
+            color: #007acc;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+        .sample-files a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏦 Lender File Upload Test</h1>
+        <p class="subtitle">Upload CSV files to test the lender import functionality</p>
+        
+        <div class="sample-files">
+            <h3>📁 Test with Sample Data:</h3>
+            <p>Create a CSV file with these headers and some data:</p>
+            <code>Name,Legal Name,Contact Email,Contact Phone,Website,Profile Score,Tier</code>
+            <br><br>
+            <small>💡 Or create any CSV file with headers to test the parsing functionality</small>
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <div>
+                <h3>📤 Drag & Drop CSV File Here</h3>
+                <p>or click to browse files</p>
+                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" />
+                <button id="uploadBtn" disabled>Upload & Parse</button>
+            </div>
+        </div>
+
+        <div id="results" class="results">
+            <div id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadArea = document.getElementById('uploadArea');
+        const results = document.getElementById('results');
+        const resultContent = document.getElementById('resultContent');
+
+        fileInput.addEventListener('change', function(e) {
+            uploadBtn.disabled = !e.target.files.length;
+        });
+
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                uploadBtn.disabled = false;
+            }
+        });
+
+        uploadArea.addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        uploadBtn.addEventListener('click', async function() {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Uploading...';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/api/v1/lenders/upload-preview', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                displayResults(result, response.ok);
+
+            } catch (error) {
+                displayResults({ 
+                    success: false, 
+                    error: 'Network error: ' + error.message 
+                }, false);
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Upload & Parse';
+            }
+        });
+
+        function displayResults(result, isSuccess) {
+            results.style.display = 'block';
+            results.className = 'results ' + (isSuccess && result.success ? 'success' : 'error');
+
+            if (result.success) {
+                resultContent.innerHTML = \`
+                    <h3>✅ Upload Successful!</h3>
+                    <p><strong>File:</strong> \${result.filename}</p>
+                    <p><strong>Rows:</strong> \${result.rows}</p>
+                    <p><strong>File Size:</strong> \${result.file_info.size} bytes</p>
+                    <p><strong>Preview ID:</strong> \${result.preview_id}</p>
+                    
+                    <h4>📋 Columns Found:</h4>
+                    <p>\${result.columns.join(', ')}</p>
+                    
+                    <h4>📊 Sample Data (first \${result.sample_data.length} rows):</h4>
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    \${result.columns.map(col => \`<th>\${col}</th>\`).join('')}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                \${result.sample_data.map(row => 
+                                    \`<tr>\${row.map(cell => \`<td>\${cell || ''}</td>\`).join('')}</tr>\`
+                                ).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                \`;
+            } else {
+                resultContent.innerHTML = \`
+                    <h3>❌ Upload Failed</h3>
+                    <p><strong>Error:</strong> \${result.error}</p>
+                    <p>Please check your file format and try again.</p>
+                \`;
+            }
+        }
+    </script>
+</body>
+</html>`;
+
+    reply.type('text/html').send(html);
+  });
 }
