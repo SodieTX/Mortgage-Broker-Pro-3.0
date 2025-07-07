@@ -64,6 +64,18 @@ services:
       - ./services/emc2-core/nodemon.json:/app/nodemon.json
     command: npm run dev
 
+  redis:
+    image: redis:7-alpine
+    container_name: mortgage_broker_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:
     name: mortgage_broker_postgres_data

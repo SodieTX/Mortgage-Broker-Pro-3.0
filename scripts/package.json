@@ -1,0 +1,16 @@
+{
+  "name": "scripts",
+  "version": "1.0.0",
+  "description": "This directory contains enhanced PowerShell scripts and testing utilities for the Mortgage Broker Pro 3.0 project.",
+  "main": "pinocchio-check.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.0.1",
+    "pg": "^8.16.3"
+  }
+}

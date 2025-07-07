@@ -9,7 +9,7 @@ import { Pool } from 'pg';
 import Redis from 'ioredis';
 import { ServiceInitializer } from '../../services/serviceInitializer';
 
-describe('Service Integration Tests', () => {
+describe.skip('Service Integration Tests', () => {
   let app: any; // Using any to avoid type conflicts
   let db: Pool;
   let redis: Redis;

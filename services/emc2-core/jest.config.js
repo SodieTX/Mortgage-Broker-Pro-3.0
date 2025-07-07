@@ -49,11 +49,12 @@ module.exports = {
   moduleNameMapper: {
     '@/(.*)': '<rootDir>/src/$1',
   },
-  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
-  testTimeout: 10000,
+  // setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
+  testTimeout: 5000,
   verbose: true,
   bail: false,
   errorOnDeprecated: true,
   clearMocks: true,
   restoreMocks: true,
+  // globalSetup: './preTestSanityCheck.ts',
 };

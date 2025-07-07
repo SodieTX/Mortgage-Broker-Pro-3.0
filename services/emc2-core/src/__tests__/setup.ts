@@ -12,11 +12,16 @@ jest.mock('../utils/logger', () => ({
     error: jest.fn(),
     warn: jest.fn(),
     debug: jest.fn(),
+    fatal: jest.fn(),
+    trace: jest.fn(),
+    level: 'error',
     child: jest.fn(() => ({
       info: jest.fn(),
       error: jest.fn(),
       warn: jest.fn(),
       debug: jest.fn(),
+      fatal: jest.fn(),
+      trace: jest.fn(),
     })),
   },
 }));
@@ -28,6 +33,45 @@ jest.setTimeout(10000);
 afterEach(() => {
   jest.clearAllMocks();
   jest.restoreAllMocks();
+});
+
+// Mock database connection
+jest.mock('../db/connection', () => ({
+  getDatabase: jest.fn(() => Promise.resolve({
+    query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 } as any),
+    connect: jest.fn(),
+    end: jest.fn(),
+    release: jest.fn(),
+  })),
+  testConnection: jest.fn(() => Promise.resolve(true)),
+}));
+
+// Mock Redis
+jest.mock('ioredis', () => {
+  return jest.fn().mockImplementation(() => ({
+    get: jest.fn().mockResolvedValue(null as any),
+    set: jest.fn().mockResolvedValue('OK' as any),
+    del: jest.fn().mockResolvedValue(1 as any),
+    exists: jest.fn().mockResolvedValue(0 as any),
+    expire: jest.fn().mockResolvedValue(1 as any),
+    ping: jest.fn().mockResolvedValue('PONG' as any),
+    quit: jest.fn().mockResolvedValue(undefined as any),
+    connect: jest.fn().mockResolvedValue(undefined as any),
+    disconnect: jest.fn().mockResolvedValue(undefined as any),
+    flushdb: jest.fn().mockResolvedValue('OK' as any),
+    on: jest.fn(),
+    off: jest.fn(),
+  }));
+});
+
+// Mock Bull queue
+jest.mock('bull', () => {
+  return jest.fn().mockImplementation(() => ({
+    add: jest.fn().mockResolvedValue({} as any),
+    process: jest.fn(),
+    on: jest.fn(),
+    close: jest.fn().mockResolvedValue(undefined as any),
+  }));
 });
 
 // Global error handler for unhandled promises

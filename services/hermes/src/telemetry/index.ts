@@ -16,6 +16,7 @@ import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-node';
+import app from './app';
 
 const SERVICE_NAME = 'hermes';
 const SERVICE_VERSION = process.env.npm_package_version || '0.0.1';
@@ -84,4 +85,11 @@ export function initializeTelemetry(): NodeSDK {
   return sdk;
 }
 
-export { trace, context, SpanStatusCode, SpanKind } from '@opentelemetry/api';
+if (require.main === module) {
+  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+  app.listen(port, () => {
+    console.log(`Hermes service listening on port ${port}`);
+  });
+}
+
+export { app, trace, context, SpanStatusCode, SpanKind } from '@opentelemetry/api';
