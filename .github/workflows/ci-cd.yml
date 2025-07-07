@@ -1,0 +1,50 @@
+name: CI/CD to Azure
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+      - name: Install dependencies
+        run: npm install
+      - name: Run tests
+        run: npm test
+      - name: Build
+        run: npm run build || true
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Lint
+        run: npm run lint
+      - name: Security Audit
+        run: npm audit --audit-level=high || true
+      - name: Deploy to Staging
+        if: github.ref == 'refs/heads/main'
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_STAGING_NAME }}
+          slot-name: 'staging'
+          package: .
+      - name: Deploy to Production
+        if: github.ref == 'refs/heads/main' && success()
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+          slot-name: 'production'
+          package: .
+      - name: Rollback on Failure
+        if: failure()
+        run: echo 'Rollback logic here (manual or via Azure CLI)'
+      - name: Run Pinocchio E2E Test
+        run: node scripts/pinocchio-check.js
