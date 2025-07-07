@@ -129,7 +129,7 @@ export default async function lenderRoutes(fastify: FastifyInstance) {
         })
       }
     }
-  }, async (request: FastifyRequest, reply: FastifyReply) => {
+  }, async (_request: FastifyRequest, reply: FastifyReply) => {
     try {
       const result = await db.query(`
         SELECT 
@@ -247,7 +247,7 @@ export default async function lenderRoutes(fastify: FastifyInstance) {
         if (filename.endsWith('.csv') || mimetype.includes('csv')) {
           // Parse CSV
           const csvContent = buffer.toString('utf-8');
-          const lines = csvContent.split('\n').filter(line => line.trim().length > 0);
+          const lines = csvContent.split('\n').filter((line: string) => line.trim().length > 0);
           
           if (lines.length === 0) {
             return reply.code(400).send({
@@ -343,7 +343,7 @@ export default async function lenderRoutes(fastify: FastifyInstance) {
   });
 
   // Simple HTML test page for file upload
-  fastify.get('/lenders/upload-test', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/lenders/upload-test', async (_request: FastifyRequest, reply: FastifyReply) => {
     const html = `
 <!DOCTYPE html>
 <html lang="en">
